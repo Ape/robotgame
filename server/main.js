@@ -15,7 +15,7 @@ var state = {
 }
 
 io.on('connection', function(socket) {
-	socket.emit('connected', state);
+	socket.emit('update', state);
 });
 
 setInterval(function() {

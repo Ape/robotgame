@@ -1,5 +1,7 @@
 var render;
 var stage;
+var connected;
+var connectionTimeout;
 var robot;
 
 window.onload = function() {
@@ -30,15 +32,9 @@ function createRobot() {
 
 function connect() {
 	setMessage('Connecting to the server...');
+
+	connected = false;
 	var socket = io(config.host);
-
-	socket.on('connected', function (data) {
-		update(data);
-
-		setMessage('');
-		stage.addChild(robot);
-	});
-
 	socket.on('update', update);
 }
 
@@ -53,6 +49,25 @@ function animate() {
 }
 
 function update(state) {
+	if (!connected) {
+		onConnected();
+	}
+
 	robot.position.x = state.position.x;
 	robot.position.y = state.position.y;
+
+	clearTimeout(connectionTimeout);
+	connectionTimeout = setTimeout(onDisconnected, 5000);
+}
+
+function onConnected() {
+	connected = true;
+	setMessage('');
+	stage.addChild(robot);
+}
+
+function onDisconnected() {
+	connected = false;
+	setMessage('Connection lost!');
+	stage.removeChildren();
 }
