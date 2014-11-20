@@ -5,6 +5,7 @@ var ARENA_WIDTH = 20; // m
 var ARENA_HEIGHT = 15; // m
 var ROBOT_SIZE = 1; // m
 
+var socket;
 var render;
 var stage;
 var connected;
@@ -19,6 +20,11 @@ window.onload = function() {
 	render = createRenderer();
 	robot = createRobot();
 	connect();
+
+	var commandSelect = document.getElementById('command');
+	commandSelect.onchange = function() {
+		socket.emit('command', { command: commandSelect.value });
+	};
 }
 
 function createRenderer() {
@@ -44,7 +50,7 @@ function connect() {
 	setMessage('Connecting to the server...');
 
 	connected = false;
-	var socket = io(config.host);
+	socket = io(config.host);
 	socket.on('update', update);
 }
 

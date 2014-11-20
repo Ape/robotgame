@@ -17,6 +17,11 @@ createWalls();
 var object = createObject(new box2d.b2Vec2(10.0, 10.0));
 
 io.listen(PORT);
+io.on('connection', function(socket) {
+	socket.on('command', function(command) {
+		object.command = command.command;
+	});
+});
 
 setInterval(function() {
 	var frames = simulate();
@@ -56,15 +61,19 @@ function createObject(position) {
 	bodyDef.set_position(position);
 	var body = world.CreateBody(bodyDef);
 	body.CreateFixture(shape, 5.0);
-	body.SetLinearVelocity(new box2d.b2Vec2(10.0, 10.0));
 
-	return { body: body }
+	return {
+		body: body,
+		command: 'stop',
+	}
 }
 
 function simulate() {
 	var frames = [];
 
 	for (var time = 0; time < TURN_TIME; time += TIMESTEP) {
+		handleCommand();
+
 		world.Step(TIMESTEP, VELOCITY_ITERATIONS, POSITION_ITERATIONS);
 
 		position = object.body.GetPosition();
@@ -80,4 +89,10 @@ function simulate() {
 	}
 
 	return frames;
+}
+
+function handleCommand() {
+	if (object.command == 'forward') {
+		object.body.ApplyForceToCenter(new box2d.b2Vec2(0.0, -5.0));
+	}
 }
