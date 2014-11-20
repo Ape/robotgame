@@ -1,4 +1,5 @@
 var PORT = 33668;
+var PING_INTERVAL = 5000; // ms
 var ARENA_WIDTH = 20; // m
 var ARENA_HEIGHT = 15; // m
 var TURN_TIME = 1; // s
@@ -19,6 +20,8 @@ var object = createObject(new box2d.b2Vec2(10.0, 10.0));
 
 io.listen(PORT);
 io.on('connection', function(socket) {
+	socket.emit('ping');
+
 	socket.on('command', function(command) {
 		object.command = command.command;
 	});
@@ -27,6 +30,10 @@ io.on('connection', function(socket) {
 		update();
 	});
 });
+
+setInterval(function() {
+	io.sockets.emit('ping');
+}, PING_INTERVAL)
 
 function update() {
 	var frames = simulate();

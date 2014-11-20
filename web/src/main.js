@@ -55,7 +55,8 @@ function connect() {
 
 	connected = false;
 	socket = io(config.host);
-	socket.on('update', update);
+	socket.on('ping', onPing);
+	socket.on('update', onUpdate);
 }
 
 function setMessage(message) {
@@ -78,19 +79,6 @@ function animate() {
 	render();
 }
 
-function update(data) {
-	if (!connected) {
-		onConnected();
-	}
-
-	time = new Date();
-	frames = data.frames;
-	timestep = data.timestep;
-
-	clearTimeout(connectionTimeout);
-	connectionTimeout = setTimeout(onDisconnected, CONNECTION_TIMEOUT);
-}
-
 function onConnected() {
 	connected = true;
 	setMessage('');
@@ -101,4 +89,19 @@ function onDisconnected() {
 	connected = false;
 	setMessage('Connection lost!');
 	stage.removeChildren();
+}
+
+function onPing() {
+	if (!connected) {
+		onConnected();
+	}
+
+	clearTimeout(connectionTimeout);
+	connectionTimeout = setTimeout(onDisconnected, CONNECTION_TIMEOUT);
+}
+
+function onUpdate(data) {
+	time = new Date();
+	frames = data.frames;
+	timestep = data.timestep;
 }
