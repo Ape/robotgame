@@ -7,8 +7,11 @@ var TIMESTEP = 1/60; // s
 var VELOCITY_ITERATIONS = 6;
 var POSITION_ITERATIONS = 2;
 var ROBOT_SIZE = 1; // m
-var ROBOT_ACCELERATION = 5.0; // m/s^2
+var ROBOT_ACCELERATION = 40.0; // m/s^2
 var ROBOT_TORQUE = 5.0; // radians/s^2
+var LINEAR_FRICTION = 10.0;
+var LATERAL_FRICTION = 20.0;
+var ANGULAR_FRICTION = 2.0;
 
 var http = require('http');
 var io = require('socket.io')(http, { serveClient: false });
@@ -74,6 +77,7 @@ function createObject(position) {
 	var bodyDef = new box2d.b2BodyDef();
 	bodyDef.set_type(box2d.b2_dynamicBody);
 	bodyDef.set_position(position);
+	bodyDef.set_angle(Math.PI);
 	var body = world.CreateBody(bodyDef);
 	body.CreateFixture(shape, 5.0);
 
@@ -87,7 +91,7 @@ function simulate() {
 	var frames = [];
 
 	for (var time = 0; time < TURN_TIME; time += TIMESTEP) {
-		handleCommand();
+		simulateObject(object);
 		world.Step(TIMESTEP, VELOCITY_ITERATIONS, POSITION_ITERATIONS);
 		frames.push(getCurrentFrame());
 	}
@@ -109,19 +113,38 @@ function getCurrentFrame() {
 	}
 }
 
-function handleCommand() {
-	switch (object.command) {
-	case 'forward':
-		var force = new box2d.b2Vec2(-ROBOT_ACCELERATION, 0.0).rotate(object.body.GetAngle());
-		object.body.ApplyForceToCenter(force);
-		break;
+function simulateObject(object) {
+	var relativeVelocity = object.body.GetLinearVelocity().copy().rotate(-object.body.GetAngle());
+	var speed = relativeVelocity.get_y();
 
-	case 'turnleft':
+	applyFriction(object, relativeVelocity);
+	applyForce(object, speed);
+	applyTorque(object);
+}
+
+function applyFriction(object, relativeVelocity) {
+	var frictionalForce = relativeVelocity.copy()
+			.mul(new box2d.b2Vec2(-LATERAL_FRICTION, -LINEAR_FRICTION))
+			.rotate(object.body.GetAngle());
+	var frictionalTorque = -ANGULAR_FRICTION * object.body.GetAngularVelocity();
+
+	object.body.ApplyForceToCenter(frictionalForce);
+	object.body.ApplyTorque(frictionalTorque);
+}
+
+function applyForce(object, speed) {
+	if (object.command == 'forward' || (object.command != 'reverse' && speed < 0.0)) {
+		var acceleration = ROBOT_ACCELERATION;
+	} else if (object.command == 'reverse' || (speed > 0.0)) {
+		var acceleration = -ROBOT_ACCELERATION;
+	}
+	object.body.ApplyForceToCenter(new box2d.b2Vec2(0.0, acceleration).rotate(object.body.GetAngle()));
+}
+
+function applyTorque(object) {
+	if (object.command == 'turnleft' || (object.command != 'turnright' && object.body.GetAngularVelocity() > 0)) {
 		object.body.ApplyTorque(-ROBOT_TORQUE);
-		break;
-
-	case 'turnright':
+	} else if (object.command == 'turnright' || object.body.GetAngularVelocity() < 0) {
 		object.body.ApplyTorque(ROBOT_TORQUE);
-		break;
 	}
 }
