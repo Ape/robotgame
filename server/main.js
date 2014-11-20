@@ -2,9 +2,10 @@ var PORT = 33668;
 var ARENA_WIDTH = 20; // m
 var ARENA_HEIGHT = 15; // m
 var TURN_TIMEOUT = 10; // s
-var TURN_TIME = 4; // s
-var COMMANDS = 4;
 var TIMESTEP = 1/60; // s
+var COMMAND_TIME = 60 * TIMESTEP;
+var SLOWDOWN_TIME = 18 * TIMESTEP;
+var COMMANDS = 4;
 var VELOCITY_ITERATIONS = 6;
 var POSITION_ITERATIONS = 2;
 var ROBOT_SIZE = 1; // m
@@ -95,7 +96,7 @@ function update() {
 		robot.ready = false;
 	});
 
-	var frames = simulate();
+	var frames = runTurn();
 	sendUpdate(frames);
 };
 
@@ -147,30 +148,36 @@ function createRobot(id) {
 	};
 }
 
-function simulate() {
+function runTurn() {
 	var frames = [];
 
-	var previousCommandNumber = null;
-	for (var time = 0; time < TURN_TIME; time += TIMESTEP) {
-		var commandNumber = Math.floor(COMMANDS * time / TURN_TIME);
+	for (var commandNumber = 0; commandNumber < COMMANDS; commandNumber++) {
+		robots.forEach(function(robot) {
+			handleCommand(robot, robot.commands[commandNumber]);
+		});
 
-		if (commandNumber != previousCommandNumber) {
-			previousCommandNumber = commandNumber;
+		simulate(frames, COMMAND_TIME / TIMESTEP);
 
-			robots.forEach(function(robot) {
-				simulateRobot(robot, commandNumber);
-			});
-		}
+		robots.forEach(function(robot) {
+			slowDown(robot);
+		});
 
+		simulate(frames, SLOWDOWN_TIME / TIMESTEP);
+	}
+
+	return frames;
+}
+
+function simulate(frames, steps) {
+	for (var step = 0; step < steps; step++) {
 		robots.forEach(function(robot) {
 			applyFriction(robot);
 		});
 
 		world.Step(TIMESTEP, VELOCITY_ITERATIONS, POSITION_ITERATIONS);
+
 		frames.push(getCurrentFrame());
 	}
-
-	return frames;
 }
 
 function getCurrentFrame() {
@@ -190,13 +197,6 @@ function getCurrentFrame() {
 	});
 
 	return {robots: robotInfo};
-}
-
-function simulateRobot(robot, commandNumber) {
-	var command = robot.commands[commandNumber];
-
-	slowDown(robot);
-	handleCommand(robot, command);
 }
 
 function getRelativeVelocity(robot) {
