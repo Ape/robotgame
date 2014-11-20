@@ -14,6 +14,7 @@ var connectionTimeout;
 var time;
 var frames;
 var timestep;
+var timeout = null;
 
 window.onload = function() {
 	stage = new PIXI.Stage(0xcccccc);
@@ -84,6 +85,13 @@ function animate() {
 			sprite.rotation = robot.rotation;
 			stage.addChild(sprite);
 		});
+
+		if (timeout != null) {
+			console.log(timeout);
+			var timeLeft = Math.max(timeout - new Date().getSeconds(), 1);
+			var text = new PIXI.Text(timeLeft, {font: '50px Sans', fill: 'red'});
+			stage.addChild(text);
+		}
 	}
 
 	render();
@@ -117,6 +125,7 @@ function onUpdate(data) {
 	}
 
 	setMessage('');
+	timeout = null;
 	document.getElementById('ready').checked = false;
 
 	time = new Date();
@@ -127,5 +136,11 @@ function onUpdate(data) {
 }
 
 function onStatus(data) {
-	setMessage('Waiting for ' + data.notReady + ' players to be ready...');
+	if (data.timeout != null) {
+		setMessage('Waiting for ' + data.notReady + ' players to be ready...');
+		timeout = new Date().getSeconds() + data.timeout;
+	} else {
+		setMessage('');
+		timeout = null;
+	}
 }

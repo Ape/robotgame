@@ -2,6 +2,7 @@ var PORT = 33668;
 var PING_INTERVAL = 5000; // ms
 var ARENA_WIDTH = 20; // m
 var ARENA_HEIGHT = 15; // m
+var TURN_TIMEOUT = 10; // s
 var TURN_TIME = 4; // s
 var COMMANDS = 4;
 var TIMESTEP = 1/60; // s
@@ -21,6 +22,7 @@ var box2d = require('./box2d-extended.js').box2d;
 var world = new box2d.b2World(new box2d.b2Vec2(0.0, 0.0));
 createWalls();
 var robots = [];
+var turnTimeout = null;
 
 io.listen(PORT);
 io.on('connection', function(socket) {
@@ -42,8 +44,17 @@ io.on('connection', function(socket) {
 
 		if (notReady == 0) {
 			update();
-		} else if (notReady != robots.length) {
-			io.sockets.emit('status', { notReady: notReady });
+		} else {
+			if (notReady == robots.length) {
+				stopTurnTimeout();
+			} else if (!turnTimeout) {
+				turnTimeout = setTimeout(update, TURN_TIMEOUT * 1000);
+			}
+
+			io.sockets.emit('status', {
+				timeout: getTimeoutRemaining(turnTimeout),
+				notReady: notReady
+			});
 		}
 	});
 });
@@ -52,7 +63,22 @@ setInterval(function() {
 	io.sockets.emit('ping');
 }, PING_INTERVAL)
 
+function getTimeoutRemaining(timeout) {
+	if (timeout == null) {
+		return null;
+	}
+
+    return Math.ceil((timeout._idleStart + timeout._idleTimeout - Date.now()) / 1000);
+}
+
+function stopTurnTimeout() {
+	clearTimeout(turnTimeout);
+	turnTimeout = null;
+}
+
 function update() {
+	stopTurnTimeout();
+
 	robots.forEach(function(robot) {
 		robot.ready = false;
 	});
