@@ -1,4 +1,9 @@
 var CONNECTION_TIMEOUT = 10000; // ms
+var WINDOW_WIDTH = 800; // px
+var WINDOW_HEIGHT = 600; // px
+var ARENA_WIDTH = 20; // m
+var ARENA_HEIGHT = 15; // m
+var ROBOT_SIZE = 1; // m
 
 var render;
 var stage;
@@ -17,7 +22,7 @@ window.onload = function() {
 }
 
 function createRenderer() {
-	var renderer = PIXI.autoDetectRenderer(800, 600);
+	var renderer = PIXI.autoDetectRenderer(WINDOW_WIDTH, WINDOW_HEIGHT);
 	document.getElementById('game').appendChild(renderer.view);
 	requestAnimFrame(animate);
 
@@ -30,7 +35,7 @@ function createRobot() {
 	var texture = PIXI.Texture.fromImage('image/robot.png');
 	var robot = new PIXI.Sprite(texture);
 	robot.anchor.x = 0.5;
-	robot.anchor.y = 0.62;
+	robot.anchor.y = 0.5;
 
 	return robot;
 }
@@ -54,8 +59,8 @@ function animate() {
 		var timeElapsed = new Date() - time;
 		var frame = Math.min(Math.floor(timeElapsed / timestep), frames.length - 1);
 
-		robot.position.x = frames[frame].object.position.x;
-		robot.position.y = frames[frame].object.position.y;
+		robot.position.x = frames[frame].object.position.x * WINDOW_WIDTH / ARENA_WIDTH;
+		robot.position.y = frames[frame].object.position.y * WINDOW_HEIGHT / ARENA_HEIGHT;
 	}
 
 	render();
