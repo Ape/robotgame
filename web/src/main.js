@@ -1,8 +1,13 @@
+var CONNECTION_TIMEOUT = 10000; // ms
+
 var render;
 var stage;
 var connected;
 var connectionTimeout;
 var robot;
+var time;
+var frames;
+var timestep;
 
 window.onload = function() {
 	stage = new PIXI.Stage(0xcccccc);
@@ -44,20 +49,29 @@ function setMessage(message) {
 
 function animate() {
 	requestAnimFrame(animate);
-	robot.rotation += 0.05;
+
+	if (connected) {
+		var timeElapsed = new Date() - time;
+		var frame = Math.min(Math.floor(timeElapsed / timestep), frames.length - 1);
+
+		robot.position.x = frames[frame].object.position.x;
+		robot.position.y = frames[frame].object.position.y;
+	}
+
 	render();
 }
 
-function update(state) {
+function update(data) {
 	if (!connected) {
 		onConnected();
 	}
 
-	robot.position.x = state.position.x;
-	robot.position.y = state.position.y;
+	time = new Date();
+	frames = data.frames;
+	timestep = data.timestep;
 
 	clearTimeout(connectionTimeout);
-	connectionTimeout = setTimeout(onDisconnected, 5000);
+	connectionTimeout = setTimeout(onDisconnected, CONNECTION_TIMEOUT);
 }
 
 function onConnected() {
