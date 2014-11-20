@@ -231,6 +231,10 @@ function turn(robot, command) {
 		applyAngularImpulse(robot, -ROBOT_ANGULAR_SPEED);
 	} else if (command == 'turnright') {
 		applyAngularImpulse(robot, ROBOT_ANGULAR_SPEED);
+	} else if (command == 'turnleftslow') {
+		applyAngularImpulse(robot, -ROBOT_ANGULAR_SPEED/2);
+	} else if (command == 'turnrightslow') {
+		applyAngularImpulse(robot, ROBOT_ANGULAR_SPEED/2);
 	}
 }
 
