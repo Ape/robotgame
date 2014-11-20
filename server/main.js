@@ -20,7 +20,7 @@ var object = createObject(new box2d.b2Vec2(10.0, 10.0));
 
 io.listen(PORT);
 io.on('connection', function(socket) {
-	socket.emit('ping');
+	sendUpdate([ getCurrentFrame() ]);
 
 	socket.on('command', function(command) {
 		object.command = command.command;
@@ -37,14 +37,17 @@ setInterval(function() {
 
 function update() {
 	var frames = simulate();
+	sendUpdate(frames);
+};
 
+function sendUpdate(frames) {
 	var update = {
 		timestep: 1000 * TIMESTEP,
 		frames: frames,
 	};
 
 	io.sockets.emit('update', update);
-};
+}
 
 function createWalls() {
 	createWall(new box2d.b2Vec2(0.0, 0.0), new box2d.b2Vec2(ARENA_WIDTH, 0.0));
@@ -85,23 +88,25 @@ function simulate() {
 
 	for (var time = 0; time < TURN_TIME; time += TIMESTEP) {
 		handleCommand();
-
 		world.Step(TIMESTEP, VELOCITY_ITERATIONS, POSITION_ITERATIONS);
-
-		position = object.body.GetPosition();
-
-		frames.push({
-			object: {
-				position: {
-					x: position.get_x(),
-					y: position.get_y(),
-				},
-				rotation: object.body.GetAngle(),
-			}
-		});
+		frames.push(getCurrentFrame());
 	}
 
 	return frames;
+}
+
+function getCurrentFrame() {
+	position = object.body.GetPosition();
+
+	return {
+		object: {
+			position: {
+				x: position.get_x(),
+				y: position.get_y(),
+			},
+			rotation: object.body.GetAngle(),
+		}
+	}
 }
 
 function handleCommand() {

@@ -92,16 +92,20 @@ function onDisconnected() {
 }
 
 function onPing() {
+	if (connected) {
+		clearTimeout(connectionTimeout);
+		connectionTimeout = setTimeout(onDisconnected, CONNECTION_TIMEOUT);
+	}
+}
+
+function onUpdate(data) {
 	if (!connected) {
 		onConnected();
 	}
 
-	clearTimeout(connectionTimeout);
-	connectionTimeout = setTimeout(onDisconnected, CONNECTION_TIMEOUT);
-}
-
-function onUpdate(data) {
 	time = new Date();
 	frames = data.frames;
 	timestep = data.timestep;
+
+	onPing();
 }
