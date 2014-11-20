@@ -1,7 +1,6 @@
 var PORT = 33668;
 var ARENA_WIDTH = 20; // m
 var ARENA_HEIGHT = 15; // m
-var TURN_WAIT = 5000; // ms
 var TURN_TIME = 1; // s
 var TIMESTEP = 1/60; // s
 var VELOCITY_ITERATIONS = 6;
@@ -23,9 +22,13 @@ io.on('connection', function(socket) {
 	socket.on('command', function(command) {
 		object.command = command.command;
 	});
+
+	socket.on('nextturn', function() {
+		update();
+	});
 });
 
-setInterval(function() {
+function update() {
 	var frames = simulate();
 
 	var update = {
@@ -34,7 +37,7 @@ setInterval(function() {
 	};
 
 	io.sockets.emit('update', update);
-}, TURN_WAIT);
+};
 
 function createWalls() {
 	createWall(new box2d.b2Vec2(0.0, 0.0), new box2d.b2Vec2(ARENA_WIDTH, 0.0));

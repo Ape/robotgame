@@ -25,6 +25,10 @@ window.onload = function() {
 	commandSelect.onchange = function() {
 		socket.emit('command', { command: commandSelect.value });
 	};
+
+	document.getElementById('nextturn').onclick = function() {
+		socket.emit('nextturn');
+	};
 }
 
 function createRenderer() {
