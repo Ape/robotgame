@@ -20,18 +20,31 @@ var box2d = require('./box2d-extended.js').box2d;
 
 var world = new box2d.b2World(new box2d.b2Vec2(0.0, 0.0));
 createWalls();
-var object = createObject(new box2d.b2Vec2(10.0, 10.0));
+var robots = [];
 
 io.listen(PORT);
 io.on('connection', function(socket) {
+	var robot = createRobot();
+	robots.push(robot);
+
 	sendUpdate([ getCurrentFrame() ]);
 
 	socket.on('commands', function(commands) {
-		object.commands = commands.commands;
-	});
+		robot.commands = commands.commands;
+		robot.ready = commands.ready;
 
-	socket.on('nextturn', function() {
-		update();
+		var notReady = 0;
+		robots.forEach(function(robot) {
+			if (!robot.ready) {
+				notReady++;
+			}
+		});
+
+		if (notReady == 0) {
+			update();
+		} else if (notReady != robots.length) {
+			io.sockets.emit('status', { notReady: notReady });
+		}
 	});
 });
 
@@ -40,6 +53,10 @@ setInterval(function() {
 }, PING_INTERVAL)
 
 function update() {
+	robots.forEach(function(robot) {
+		robot.ready = false;
+	});
+
 	var frames = simulate();
 	sendUpdate(frames);
 };
@@ -70,7 +87,9 @@ function createWall(startPoint, endPoint) {
 	body.CreateFixture(shape, 0.0);
 }
 
-function createObject(position) {
+function createRobot() {
+	var position = new box2d.b2Vec2(Math.random() * ARENA_WIDTH, Math.random() * ARENA_HEIGHT);
+
 	var shape = new box2d.b2PolygonShape();
 	var size = ROBOT_SIZE / 2;
 	shape.SetAsBox(size, size);
@@ -84,6 +103,7 @@ function createObject(position) {
 
 	return {
 		body: body,
+		ready: false,
 		commands: ['stop', 'stop', 'stop', 'stop'],
 	}
 }
@@ -93,7 +113,11 @@ function simulate() {
 
 	for (var time = 0; time < TURN_TIME; time += TIMESTEP) {
 		var commandNumber = Math.floor(COMMANDS * time / TURN_TIME);
-		simulateObject(object, commandNumber);
+
+		robots.forEach(function(robot) {
+			simulateRobot(robot, commandNumber);
+		});
+
 		world.Step(TIMESTEP, VELOCITY_ITERATIONS, POSITION_ITERATIONS);
 		frames.push(getCurrentFrame());
 	}
@@ -102,40 +126,44 @@ function simulate() {
 }
 
 function getCurrentFrame() {
-	position = object.body.GetPosition();
+	var robotInfo = [];
 
-	return {
-		object: {
+	robots.forEach(function(robot) {
+		position = robot.body.GetPosition();
+
+		robotInfo.push({
 			position: {
 				x: position.get_x(),
 				y: position.get_y(),
 			},
-			rotation: object.body.GetAngle(),
-		}
-	}
+			rotation: robot.body.GetAngle(),
+		});
+	});
+
+	return { robots: robotInfo };
 }
 
-function simulateObject(object, commandNumber) {
-	var command = object.commands[commandNumber];
-	var relativeVelocity = object.body.GetLinearVelocity().copy().rotate(-object.body.GetAngle());
+function simulateRobot(robot, commandNumber) {
+	var command = robot.commands[commandNumber];
+	var relativeVelocity = robot.body.GetLinearVelocity().copy().rotate(-robot.body.GetAngle());
 	var speed = relativeVelocity.get_y();
 
-	applyFriction(object, relativeVelocity);
-	applyForce(object, command, speed);
-	applyTorque(object, command);
+	applyFriction(robot, relativeVelocity);
+	applyForce(robot, command, speed);
+	applyTorque(robot, command);
 }
 
-function applyFriction(object, relativeVelocity) {
+function applyFriction(robot, relativeVelocity) {
 	var frictionalForce = relativeVelocity.copy()
 			.mul(new box2d.b2Vec2(-LATERAL_FRICTION, -LINEAR_FRICTION))
-			.rotate(object.body.GetAngle());
-	var frictionalTorque = -ANGULAR_FRICTION * object.body.GetAngularVelocity();
+			.rotate(robot.body.GetAngle());
+	var frictionalTorque = -ANGULAR_FRICTION * robot.body.GetAngularVelocity();
 
-	object.body.ApplyForceToCenter(frictionalForce);
-	object.body.ApplyTorque(frictionalTorque);
+	robot.body.ApplyForceToCenter(frictionalForce);
+	robot.body.ApplyTorque(frictionalTorque);
 }
 
-function applyForce(object, command, speed) {
+function applyForce(robot, command, speed) {
 	var acceleration = 0.0;
 
 	if (command == 'forward' || (command != 'reverse' && speed < 0.0)) {
@@ -144,13 +172,13 @@ function applyForce(object, command, speed) {
 		acceleration = -ROBOT_ACCELERATION;
 	}
 
-	object.body.ApplyForceToCenter(new box2d.b2Vec2(0.0, acceleration).rotate(object.body.GetAngle()));
+	robot.body.ApplyForceToCenter(new box2d.b2Vec2(0.0, acceleration).rotate(robot.body.GetAngle()));
 }
 
-function applyTorque(object, command) {
-	if (command == 'turnleft' || (command != 'turnright' && object.body.GetAngularVelocity() > 0)) {
-		object.body.ApplyTorque(-ROBOT_TORQUE);
-	} else if (command == 'turnright' || object.body.GetAngularVelocity() < 0) {
-		object.body.ApplyTorque(ROBOT_TORQUE);
+function applyTorque(robot, command) {
+	if (command == 'turnleft' || (command != 'turnright' && robot.body.GetAngularVelocity() > 0)) {
+		robot.body.ApplyTorque(-ROBOT_TORQUE);
+	} else if (command == 'turnright' || robot.body.GetAngularVelocity() < 0) {
+		robot.body.ApplyTorque(ROBOT_TORQUE);
 	}
 }

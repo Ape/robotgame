@@ -8,9 +8,9 @@ var ROBOT_SIZE = 1; // m
 var socket;
 var render;
 var stage;
+var texture = PIXI.Texture.fromImage('image/robot.png');
 var connected;
 var connectionTimeout;
-var robot;
 var time;
 var frames;
 var timestep;
@@ -18,24 +18,16 @@ var timestep;
 window.onload = function() {
 	stage = new PIXI.Stage(0xcccccc);
 	render = createRenderer();
-	robot = createRobot();
 	connect();
-	observeInputs();
+	observeCommandChanges();
 }
 
-function observeInputs() {
-	observeCommandSelects();
-
-	document.getElementById('nextturn').onclick = function() {
-		socket.emit('nextturn');
-	};
-}
-
-function observeCommandSelects() {
+function observeCommandChanges() {
 	document.getElementById('command1').onchange = sendCommands;
 	document.getElementById('command2').onchange = sendCommands;
 	document.getElementById('command3').onchange = sendCommands;
 	document.getElementById('command4').onchange = sendCommands;
+	document.getElementById('ready').onclick = sendCommands;
 }
 
 function sendCommands() {
@@ -45,7 +37,8 @@ function sendCommands() {
 			document.getElementById('command2').value,
 			document.getElementById('command3').value,
 			document.getElementById('command4').value,
-		]
+		],
+		ready: document.getElementById('ready').checked,
 	});
 }
 
@@ -59,15 +52,6 @@ function createRenderer() {
 	}
 }
 
-function createRobot() {
-	var texture = PIXI.Texture.fromImage('image/robot.png');
-	var robot = new PIXI.Sprite(texture);
-	robot.anchor.x = 0.5;
-	robot.anchor.y = 0.5;
-
-	return robot;
-}
-
 function connect() {
 	setMessage('Connecting to the server...');
 
@@ -75,6 +59,7 @@ function connect() {
 	socket = io(config.host);
 	socket.on('ping', onPing);
 	socket.on('update', onUpdate);
+	socket.on('status', onStatus);
 }
 
 function setMessage(message) {
@@ -89,9 +74,16 @@ function animate() {
 		var frameNumber = Math.min(Math.floor(timeElapsed / timestep), frames.length - 1);
 		var frame = frames[frameNumber];
 
-		robot.position.x = Math.round(frame.object.position.x * WINDOW_WIDTH / ARENA_WIDTH);
-		robot.position.y = Math.round(frame.object.position.y * WINDOW_HEIGHT / ARENA_HEIGHT);
-		robot.rotation = frame.object.rotation;
+		stage.removeChildren();
+		frame.robots.forEach(function(robot) {
+			var sprite = new PIXI.Sprite(texture);
+			sprite.anchor.x = 0.5;
+			sprite.anchor.y = 0.5;
+			sprite.position.x = Math.round(robot.position.x * WINDOW_WIDTH / ARENA_WIDTH);
+			sprite.position.y = Math.round(robot.position.y * WINDOW_HEIGHT / ARENA_HEIGHT);
+			sprite.rotation = robot.rotation;
+			stage.addChild(sprite);
+		});
 	}
 
 	render();
@@ -100,17 +92,16 @@ function animate() {
 function onConnected() {
 	connected = true;
 	setMessage('');
-	stage.addChild(robot);
 	document.getElementById('command1').value = 'stop';
 	document.getElementById('command2').value = 'stop';
 	document.getElementById('command3').value = 'stop';
 	document.getElementById('command4').value = 'stop';
+	document.getElementById('ready').checked = false;
 }
 
 function onDisconnected() {
 	connected = false;
 	setMessage('Connection lost!');
-	stage.removeChildren();
 }
 
 function onPing() {
@@ -125,9 +116,16 @@ function onUpdate(data) {
 		onConnected();
 	}
 
+	setMessage('');
+	document.getElementById('ready').checked = false;
+
 	time = new Date();
 	frames = data.frames;
 	timestep = data.timestep;
 
 	onPing();
+}
+
+function onStatus(data) {
+	setMessage('Waiting for ' + data.notReady + ' players to be ready...');
 }
