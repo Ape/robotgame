@@ -10,7 +10,7 @@ var GOLDEN_OFFSET = -1;
 var socket;
 var render;
 var stage;
-var texture = PIXI.Texture.fromImage('image/robot.png');
+var texture;
 var sprites = [];
 var connected;
 var time;
@@ -46,6 +46,9 @@ function sendCommands() {
 }
 
 function createRenderer() {
+	PIXI.scaleModes.DEFAULT = PIXI.scaleModes.NEAREST;
+	texture = PIXI.Texture.fromImage('image/robot.png');
+
 	var renderer = PIXI.autoDetectRenderer(WINDOW_WIDTH, WINDOW_HEIGHT);
 	document.getElementById('game').appendChild(renderer.view);
 	requestAnimFrame(animate);
@@ -79,8 +82,8 @@ function animate() {
 
 		frame.robots.forEach(function(robot) {
 			var sprite = getSprite(robot.id);
-			sprite.position.x = Math.round(robot.position.x * WINDOW_WIDTH / ARENA_WIDTH);
-			sprite.position.y = Math.round(robot.position.y * WINDOW_HEIGHT / ARENA_HEIGHT);
+			sprite.position.x = robot.position.x * WINDOW_WIDTH / ARENA_WIDTH;
+			sprite.position.y = robot.position.y * WINDOW_HEIGHT / ARENA_HEIGHT;
 			sprite.rotation = robot.rotation;
 
 			stage.addChild(sprite);
