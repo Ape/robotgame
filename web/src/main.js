@@ -55,11 +55,10 @@ function createRenderer() {
 }
 
 function connect() {
-	setMessage('Connecting to the server...');
+	onConnecting();
 
-	connected = false;
 	socket = io(config.host);
-	socket.on('disconnect', onDisconnected);
+	socket.on('disconnect', onConnecting);
 	socket.on('update', onUpdate);
 	socket.on('status', onStatus);
 }
@@ -131,6 +130,11 @@ function getHueFilter(angle) {
 	return filter;
 }
 
+function onConnecting() {
+	connected = false;
+	setMessage('Connecting to the server...');
+}
+
 function onConnected() {
 	connected = true;
 	setMessage('');
@@ -139,11 +143,6 @@ function onConnected() {
 	document.getElementById('command3').value = 'stop';
 	document.getElementById('command4').value = 'stop';
 	document.getElementById('ready').checked = false;
-}
-
-function onDisconnected() {
-	connected = false;
-	setMessage('Connection lost!');
 }
 
 function onUpdate(data) {
