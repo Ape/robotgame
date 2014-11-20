@@ -8,11 +8,10 @@ var TIMESTEP = 1/60; // s
 var VELOCITY_ITERATIONS = 6;
 var POSITION_ITERATIONS = 2;
 var ROBOT_SIZE = 1; // m
-var ROBOT_ACCELERATION = 40.0; // m/s^2
-var ROBOT_TORQUE = 5.0; // radians/s^2
-var LINEAR_FRICTION = 10.0;
-var LATERAL_FRICTION = 20.0;
-var ANGULAR_FRICTION = 2.0;
+var ROBOT_SPEED = 2.0; // m/s
+var ROBOT_SPEED_REVERSE = 1.0; // m/s
+var ROBOT_ANGULAR_SPEED = Math.PI/2; // radians/s
+var LATERAL_FRICTION = 10.0;
 
 var http = require('http');
 var io = require('socket.io')(http, {serveClient: false});
@@ -151,11 +150,20 @@ function createRobot(id) {
 function simulate() {
 	var frames = [];
 
+	var previousCommandNumber = null;
 	for (var time = 0; time < TURN_TIME; time += TIMESTEP) {
 		var commandNumber = Math.floor(COMMANDS * time / TURN_TIME);
 
+		if (commandNumber != previousCommandNumber) {
+			previousCommandNumber = commandNumber;
+
+			robots.forEach(function(robot) {
+				simulateRobot(robot, commandNumber);
+			});
+		}
+
 		robots.forEach(function(robot) {
-			simulateRobot(robot, commandNumber);
+			applyFriction(robot);
 		});
 
 		world.Step(TIMESTEP, VELOCITY_ITERATIONS, POSITION_ITERATIONS);
@@ -186,40 +194,59 @@ function getCurrentFrame() {
 
 function simulateRobot(robot, commandNumber) {
 	var command = robot.commands[commandNumber];
-	var relativeVelocity = robot.body.GetLinearVelocity().copy().rotate(-robot.body.GetAngle());
+	var relativeVelocity = getRelativeVelocity(robot);
 	var speed = relativeVelocity.get_y();
 
-	applyFriction(robot, relativeVelocity);
-	applyForce(robot, command, speed);
-	applyTorque(robot, command);
+	slowDown(robot, relativeVelocity);
+	move(robot, command, speed);
+	turn(robot, command);
 }
 
-function applyFriction(robot, relativeVelocity) {
-	var frictionalForce = relativeVelocity.copy()
-			.mul(new box2d.b2Vec2(-LATERAL_FRICTION, -LINEAR_FRICTION))
+function getRelativeVelocity(robot) {
+	return robot.body.GetLinearVelocity().copy().rotate(-robot.body.GetAngle());
+}
+
+function slowDown(robot, relativeVelocity) {
+	var impulse = new box2d.b2Vec2(0.0, -relativeVelocity.get_y() * robot.body.GetMass())
 			.rotate(robot.body.GetAngle());
-	var frictionalTorque = -ANGULAR_FRICTION * robot.body.GetAngularVelocity();
+	robot.body.ApplyLinearImpulse(impulse, robot.body.GetPosition());
+
+	applyAngularImpulse(robot, -limitValue(robot.body.GetAngularVelocity(), -ROBOT_ANGULAR_SPEED, ROBOT_ANGULAR_SPEED));
+}
+
+function limitValue(value, min, max) {
+	return Math.max(min, Math.min(max, value));
+}
+
+function move(robot, command, speed) {
+	if (command == 'forward') {
+		applyImpulse(robot, ROBOT_SPEED);
+	} else if (command == 'reverse') {
+		applyImpulse(robot, -ROBOT_SPEED_REVERSE);
+	}
+}
+
+function turn(robot, command) {
+	if (command == 'turnleft') {
+		applyAngularImpulse(robot, -ROBOT_ANGULAR_SPEED);
+	} else if (command == 'turnright') {
+		applyAngularImpulse(robot, ROBOT_ANGULAR_SPEED);
+	}
+}
+
+function applyImpulse(robot, speed) {
+	var impulse = new box2d.b2Vec2(0.0, speed * robot.body.GetMass()).rotate(robot.body.GetAngle());
+	robot.body.ApplyLinearImpulse(impulse, robot.body.GetPosition());
+}
+
+function applyAngularImpulse(robot, angularSpeed) {
+	robot.body.ApplyAngularImpulse(angularSpeed * robot.body.GetInertia());
+}
+
+function applyFriction(robot) {
+	var frictionalForce = getRelativeVelocity(robot).copy()
+			.mul(new box2d.b2Vec2(-LATERAL_FRICTION, 0))
+			.rotate(robot.body.GetAngle());
 
 	robot.body.ApplyForceToCenter(frictionalForce);
-	robot.body.ApplyTorque(frictionalTorque);
-}
-
-function applyForce(robot, command, speed) {
-	var acceleration = 0.0;
-
-	if (command == 'forward' || (command != 'reverse' && speed < 0.0)) {
-		acceleration = ROBOT_ACCELERATION;
-	} else if (command == 'reverse' || (speed > 0.0)) {
-		acceleration = -ROBOT_ACCELERATION;
-	}
-
-	robot.body.ApplyForceToCenter(new box2d.b2Vec2(0.0, acceleration).rotate(robot.body.GetAngle()));
-}
-
-function applyTorque(robot, command) {
-	if (command == 'turnleft' || (command != 'turnright' && robot.body.GetAngularVelocity() > 0)) {
-		robot.body.ApplyTorque(-ROBOT_TORQUE);
-	} else if (command == 'turnright' || robot.body.GetAngularVelocity() < 0) {
-		robot.body.ApplyTorque(ROBOT_TORQUE);
-	}
 }
