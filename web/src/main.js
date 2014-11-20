@@ -83,6 +83,7 @@ function onConnected() {
 	connected = true;
 	setMessage('');
 	stage.addChild(robot);
+	document.getElementById('command').value = 'stop';
 }
 
 function onDisconnected() {
