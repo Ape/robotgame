@@ -1,5 +1,4 @@
 var PORT = 33668;
-var PING_INTERVAL = 5000; // ms
 var ARENA_WIDTH = 20; // m
 var ARENA_HEIGHT = 15; // m
 var TURN_TIMEOUT = 10; // s
@@ -52,10 +51,6 @@ io.on('connection', function(socket) {
 		checkTurnEnd();
 	});
 });
-
-setInterval(function() {
-	io.sockets.emit('ping');
-}, PING_INTERVAL)
 
 function getTimeoutRemaining(timeout) {
 	if (timeout == null) {

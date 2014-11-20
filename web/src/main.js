@@ -1,4 +1,3 @@
-var CONNECTION_TIMEOUT = 10000; // ms
 var WINDOW_WIDTH = 800; // px
 var WINDOW_HEIGHT = 600; // px
 var ARENA_WIDTH = 20; // m
@@ -13,7 +12,6 @@ var render;
 var stage;
 var texture = PIXI.Texture.fromImage('image/robot.png');
 var connected;
-var connectionTimeout;
 var time;
 var frames;
 var timestep;
@@ -61,7 +59,7 @@ function connect() {
 
 	connected = false;
 	socket = io(config.host);
-	socket.on('ping', onPing);
+	socket.on('disconnect', onDisconnected);
 	socket.on('update', onUpdate);
 	socket.on('status', onStatus);
 }
@@ -72,13 +70,13 @@ function setMessage(message) {
 
 function animate() {
 	requestAnimFrame(animate);
+	stage.removeChildren();
 
 	if (connected) {
 		var timeElapsed = new Date() - time;
 		var frameNumber = Math.min(Math.floor(timeElapsed / timestep), frames.length - 1);
 		var frame = frames[frameNumber];
 
-		stage.removeChildren();
 		frame.robots.forEach(function(robot) {
 			var sprite = new PIXI.Sprite(texture);
 			sprite.anchor.x = 0.5;
@@ -148,13 +146,6 @@ function onDisconnected() {
 	setMessage('Connection lost!');
 }
 
-function onPing() {
-	if (connected) {
-		clearTimeout(connectionTimeout);
-		connectionTimeout = setTimeout(onDisconnected, CONNECTION_TIMEOUT);
-	}
-}
-
 function onUpdate(data) {
 	if (!connected) {
 		onConnected();
@@ -167,8 +158,6 @@ function onUpdate(data) {
 	time = new Date();
 	frames = data.frames;
 	timestep = data.timestep;
-
-	onPing();
 }
 
 function onStatus(data) {
