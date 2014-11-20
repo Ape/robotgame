@@ -10,7 +10,7 @@ var POSITION_ITERATIONS = 2;
 
 var http = require('http');
 var io = require('socket.io')(http, { serveClient: false });
-var box2d = require('./lib/box2d.js');
+var box2d = require('./box2d-extended.js').box2d;
 
 var world = new box2d.b2World(new box2d.b2Vec2(0.0, 0.0));
 createWalls();
