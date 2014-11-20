@@ -26,7 +26,7 @@ var turnTimeout = null;
 
 io.listen(PORT);
 io.on('connection', function(socket) {
-	var robot = createRobot();
+	var robot = createRobot(robots.length);
 	robots.push(robot);
 
 	sendUpdate([ getCurrentFrame() ]);
@@ -113,7 +113,7 @@ function createWall(startPoint, endPoint) {
 	body.CreateFixture(shape, 0.0);
 }
 
-function createRobot() {
+function createRobot(id) {
 	var position = new box2d.b2Vec2(Math.random() * ARENA_WIDTH, Math.random() * ARENA_HEIGHT);
 
 	var shape = new box2d.b2PolygonShape();
@@ -128,6 +128,7 @@ function createRobot() {
 	body.CreateFixture(shape, 5.0);
 
 	return {
+		id: id,
 		body: body,
 		ready: false,
 		commands: ['stop', 'stop', 'stop', 'stop'],
@@ -158,6 +159,7 @@ function getCurrentFrame() {
 		position = robot.body.GetPosition();
 
 		robotInfo.push({
+			id: robot.id,
 			position: {
 				x: position.get_x(),
 				y: position.get_y(),
