@@ -34,34 +34,22 @@ io.on('connection', function(socket) {
 	sendUpdate([ getCurrentFrame() ]);
 
 	socket.on('disconnect', function() {
-        console.log('Player from ' + socket.handshake.address + ' disconnected.');
-    });
+		console.log('Player from ' + socket.handshake.address + ' disconnected.');
+
+		world.DestroyBody(robot.body);
+
+		var robotIndex = robots.indexOf(robot);
+		if (robotIndex >= 0) {
+			robots.splice(robotIndex, 1);
+		}
+
+		checkTurnEnd();
+	});
 
 	socket.on('commands', function(commands) {
 		robot.commands = commands.commands;
 		robot.ready = commands.ready;
-
-		var notReady = 0;
-		robots.forEach(function(robot) {
-			if (!robot.ready) {
-				notReady++;
-			}
-		});
-
-		if (notReady == 0) {
-			update();
-		} else {
-			if (notReady == robots.length) {
-				stopTurnTimeout();
-			} else if (!turnTimeout) {
-				turnTimeout = setTimeout(update, TURN_TIMEOUT * 1000);
-			}
-
-			io.sockets.emit('status', {
-				timeout: getTimeoutRemaining(turnTimeout),
-				notReady: notReady
-			});
-		}
+		checkTurnEnd();
 	});
 });
 
@@ -75,6 +63,30 @@ function getTimeoutRemaining(timeout) {
 	}
 
     return Math.ceil((timeout._idleStart + timeout._idleTimeout - Date.now()) / 1000);
+}
+
+function checkTurnEnd() {
+	var notReady = 0;
+	robots.forEach(function(robot) {
+		if (!robot.ready) {
+			notReady++;
+		}
+	});
+
+	if (notReady == 0) {
+		update();
+	} else {
+		if (notReady == robots.length) {
+			stopTurnTimeout();
+		} else if (!turnTimeout) {
+			turnTimeout = setTimeout(update, TURN_TIMEOUT * 1000);
+		}
+
+		io.sockets.emit('status', {
+			timeout: getTimeoutRemaining(turnTimeout),
+			notReady: notReady
+		});
+	}
 }
 
 function stopTurnTimeout() {
