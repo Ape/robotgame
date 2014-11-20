@@ -26,10 +26,16 @@ var turnTimeout = null;
 
 io.listen(PORT);
 io.on('connection', function(socket) {
+	console.log('Player from ' + socket.handshake.address + ' connected.');
+
 	var robot = createRobot(robots.length);
 	robots.push(robot);
 
 	sendUpdate([ getCurrentFrame() ]);
+
+	socket.on('disconnect', function() {
+        console.log('Player from ' + socket.handshake.address + ' disconnected.');
+    });
 
 	socket.on('commands', function(commands) {
 		robot.commands = commands.commands;
