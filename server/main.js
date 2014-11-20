@@ -15,7 +15,7 @@ var LATERAL_FRICTION = 20.0;
 var ANGULAR_FRICTION = 2.0;
 
 var http = require('http');
-var io = require('socket.io')(http, { serveClient: false });
+var io = require('socket.io')(http, {serveClient: false});
 var box2d = require('./box2d-extended.js').box2d;
 
 var world = new box2d.b2World(new box2d.b2Vec2(0.0, 0.0));
@@ -145,7 +145,7 @@ function createRobot(id) {
 		body: body,
 		ready: false,
 		commands: ['stop', 'stop', 'stop', 'stop'],
-	}
+	};
 }
 
 function simulate() {
@@ -181,7 +181,7 @@ function getCurrentFrame() {
 		});
 	});
 
-	return { robots: robotInfo };
+	return {robots: robotInfo};
 }
 
 function simulateRobot(robot, commandNumber) {

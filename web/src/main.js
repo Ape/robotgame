@@ -22,7 +22,7 @@ window.onload = function() {
 	render = createRenderer();
 	connect();
 	observeCommandChanges();
-}
+};
 
 function observeCommandChanges() {
 	document.getElementById('command1').onchange = sendCommands;
@@ -51,7 +51,7 @@ function createRenderer() {
 
 	return function() {
 		renderer.render(stage);
-	}
+	};
 }
 
 function connect() {
