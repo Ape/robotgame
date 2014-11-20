@@ -194,20 +194,17 @@ function getCurrentFrame() {
 
 function simulateRobot(robot, commandNumber) {
 	var command = robot.commands[commandNumber];
-	var relativeVelocity = getRelativeVelocity(robot);
-	var speed = relativeVelocity.get_y();
 
-	slowDown(robot, relativeVelocity);
-	move(robot, command, speed);
-	turn(robot, command);
+	slowDown(robot);
+	handleCommand(robot, command);
 }
 
 function getRelativeVelocity(robot) {
 	return robot.body.GetLinearVelocity().copy().rotate(-robot.body.GetAngle());
 }
 
-function slowDown(robot, relativeVelocity) {
-	var impulse = new box2d.b2Vec2(0.0, -relativeVelocity.get_y() * robot.body.GetMass())
+function slowDown(robot) {
+	var impulse = new box2d.b2Vec2(0.0, -getRelativeVelocity(robot).get_y() * robot.body.GetMass())
 			.rotate(robot.body.GetAngle());
 	robot.body.ApplyLinearImpulse(impulse, robot.body.GetPosition());
 
@@ -218,23 +215,31 @@ function limitValue(value, min, max) {
 	return Math.max(min, Math.min(max, value));
 }
 
-function move(robot, command, speed) {
-	if (command == 'forward') {
+function handleCommand(robot, command) {
+	switch (command) {
+	case 'forward':
 		applyImpulse(robot, ROBOT_SPEED);
-	} else if (command == 'reverse') {
-		applyImpulse(robot, -ROBOT_SPEED_REVERSE);
-	}
-}
+		break;
 
-function turn(robot, command) {
-	if (command == 'turnleft') {
+	case 'reverse':
+		applyImpulse(robot, -ROBOT_SPEED_REVERSE);
+		break;
+
+	case 'turnleft':
 		applyAngularImpulse(robot, -ROBOT_ANGULAR_SPEED);
-	} else if (command == 'turnright') {
+		break;
+
+	case 'turnright':
 		applyAngularImpulse(robot, ROBOT_ANGULAR_SPEED);
-	} else if (command == 'turnleftslow') {
+		break;
+
+	case 'turnleftslow':
 		applyAngularImpulse(robot, -ROBOT_ANGULAR_SPEED/2);
-	} else if (command == 'turnrightslow') {
+		break;
+
+	case 'turnrightslow':
 		applyAngularImpulse(robot, ROBOT_ANGULAR_SPEED/2);
+		break;
 	}
 }
 
