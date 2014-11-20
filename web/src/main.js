@@ -20,15 +20,33 @@ window.onload = function() {
 	render = createRenderer();
 	robot = createRobot();
 	connect();
+	observeInputs();
+}
 
-	var commandSelect = document.getElementById('command');
-	commandSelect.onchange = function() {
-		socket.emit('command', { command: commandSelect.value });
-	};
+function observeInputs() {
+	observeCommandSelects();
 
 	document.getElementById('nextturn').onclick = function() {
 		socket.emit('nextturn');
 	};
+}
+
+function observeCommandSelects() {
+	document.getElementById('command1').onchange = sendCommands;
+	document.getElementById('command2').onchange = sendCommands;
+	document.getElementById('command3').onchange = sendCommands;
+	document.getElementById('command4').onchange = sendCommands;
+}
+
+function sendCommands() {
+	socket.emit('commands', {
+		commands: [
+			document.getElementById('command1').value,
+			document.getElementById('command2').value,
+			document.getElementById('command3').value,
+			document.getElementById('command4').value,
+		]
+	});
 }
 
 function createRenderer() {
@@ -83,7 +101,10 @@ function onConnected() {
 	connected = true;
 	setMessage('');
 	stage.addChild(robot);
-	document.getElementById('command').value = 'stop';
+	document.getElementById('command1').value = 'stop';
+	document.getElementById('command2').value = 'stop';
+	document.getElementById('command3').value = 'stop';
+	document.getElementById('command4').value = 'stop';
 }
 
 function onDisconnected() {
