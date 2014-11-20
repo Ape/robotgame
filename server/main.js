@@ -133,11 +133,14 @@ function applyFriction(object, relativeVelocity) {
 }
 
 function applyForce(object, speed) {
+	var acceleration = 0.0;
+
 	if (object.command == 'forward' || (object.command != 'reverse' && speed < 0.0)) {
-		var acceleration = ROBOT_ACCELERATION;
+		acceleration = ROBOT_ACCELERATION;
 	} else if (object.command == 'reverse' || (speed > 0.0)) {
-		var acceleration = -ROBOT_ACCELERATION;
+		acceleration = -ROBOT_ACCELERATION;
 	}
+
 	object.body.ApplyForceToCenter(new box2d.b2Vec2(0.0, acceleration).rotate(object.body.GetAngle()));
 }
 
