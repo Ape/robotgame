@@ -59,8 +59,8 @@ function animate() {
 		var timeElapsed = new Date() - time;
 		var frame = Math.min(Math.floor(timeElapsed / timestep), frames.length - 1);
 
-		robot.position.x = frames[frame].object.position.x * WINDOW_WIDTH / ARENA_WIDTH;
-		robot.position.y = frames[frame].object.position.y * WINDOW_HEIGHT / ARENA_HEIGHT;
+		robot.position.x = Math.round(frames[frame].object.position.x * WINDOW_WIDTH / ARENA_WIDTH);
+		robot.position.y = Math.round(frames[frame].object.position.y * WINDOW_HEIGHT / ARENA_HEIGHT);
 	}
 
 	render();
