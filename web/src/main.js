@@ -87,7 +87,6 @@ function animate() {
 		});
 
 		if (timeout != null) {
-			console.log(timeout);
 			var timeLeft = Math.max(timeout - new Date().getSeconds(), 1);
 			var text = new PIXI.Text(timeLeft, {font: '50px Sans', fill: 'red'});
 			stage.addChild(text);
