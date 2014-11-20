@@ -62,7 +62,7 @@ function getTimeoutRemaining(timeout) {
 		return null;
 	}
 
-    return Math.ceil((timeout._idleStart + timeout._idleTimeout - Date.now()) / 1000);
+	return Math.ceil((timeout._idleStart + timeout._idleTimeout - Date.now()) / 1000);
 }
 
 function checkTurnEnd() {
