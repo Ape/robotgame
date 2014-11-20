@@ -11,6 +11,7 @@ var socket;
 var render;
 var stage;
 var texture = PIXI.Texture.fromImage('image/robot.png');
+var sprites = [];
 var connected;
 var time;
 var frames;
@@ -77,13 +78,10 @@ function animate() {
 		var frame = frames[frameNumber];
 
 		frame.robots.forEach(function(robot) {
-			var sprite = new PIXI.Sprite(texture);
-			sprite.anchor.x = 0.5;
-			sprite.anchor.y = 0.5;
+			var sprite = getSprite(robot.id);
 			sprite.position.x = Math.round(robot.position.x * WINDOW_WIDTH / ARENA_WIDTH);
 			sprite.position.y = Math.round(robot.position.y * WINDOW_HEIGHT / ARENA_HEIGHT);
 			sprite.rotation = robot.rotation;
-			sprite.filters = [getHueFilter((robot.id + GOLDEN_OFFSET) * GOLDEN_ANGLE)];
 
 			stage.addChild(sprite);
 		});
@@ -98,7 +96,19 @@ function animate() {
 	render();
 }
 
-function getHueFilter(angle) {
+function getSprite(id) {
+	while (sprites.length <= id) {
+		var sprite = new PIXI.Sprite(texture);
+		sprite.anchor.x = 0.5;
+		sprite.anchor.y = 0.5;
+		sprite.filters = [createHueFilter((id + GOLDEN_OFFSET) * GOLDEN_ANGLE)];
+		sprites.push(sprite);
+	}
+
+	return sprites[id];
+}
+
+function createHueFilter(angle) {
 	var LUMA_RED = 0.299;
 	var LUMA_GREEN = 0.587;
 	var LUMA_BLUE = 0.114;
