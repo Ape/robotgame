@@ -1,12 +1,14 @@
 var PORT = 33668;
 var ARENA_WIDTH = 20; // m
 var ARENA_HEIGHT = 15; // m
-var ROBOT_SIZE = 1; // m
 var TURN_WAIT = 5000; // ms
 var TURN_TIME = 1; // s
 var TIMESTEP = 1/60; // s
 var VELOCITY_ITERATIONS = 6;
 var POSITION_ITERATIONS = 2;
+var ROBOT_SIZE = 1; // m
+var ROBOT_ACCELERATION = 5.0; // m/s^2
+var ROBOT_TORQUE = 5.0; // radians/s^2
 
 var http = require('http');
 var io = require('socket.io')(http, { serveClient: false });
@@ -83,7 +85,8 @@ function simulate() {
 				position: {
 					x: position.get_x(),
 					y: position.get_y(),
-				}
+				},
+				rotation: object.body.GetAngle(),
 			}
 		});
 	}
@@ -92,7 +95,18 @@ function simulate() {
 }
 
 function handleCommand() {
-	if (object.command == 'forward') {
-		object.body.ApplyForceToCenter(new box2d.b2Vec2(0.0, -5.0));
+	switch (object.command) {
+	case 'forward':
+		var force = new box2d.b2Vec2(-ROBOT_ACCELERATION, 0.0).rotate(object.body.GetAngle());
+		object.body.ApplyForceToCenter(force);
+		break;
+
+	case 'turnleft':
+		object.body.ApplyTorque(-ROBOT_TORQUE);
+		break;
+
+	case 'turnright':
+		object.body.ApplyTorque(ROBOT_TORQUE);
+		break;
 	}
 }
