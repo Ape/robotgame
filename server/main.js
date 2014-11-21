@@ -61,6 +61,10 @@ function getTimeoutRemaining(timeout) {
 }
 
 function checkTurnEnd() {
+	if (robots.length == 0) {
+		return;
+	}
+
 	var notReady = 0;
 	robots.forEach(function(robot) {
 		if (!robot.ready) {
