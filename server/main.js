@@ -108,6 +108,7 @@ function update() {
 
 function createUpdate(frames) {
 	return {
+		commands: COMMANDS,
 		timestep: 1000 * TIMESTEP,
 		frames: frames,
 	};

@@ -1,0 +1,9 @@
+[
+	["stop", "Stop"],
+	["forward", "Move forward"],
+	["reverse", "Reverse"],
+	["turnright", "Turn right"],
+	["turnleft", "Turn left"],
+	["turnrightslow", "Turn right slowly"],
+	["turnleftslow", "Turn left slowly"]
+]

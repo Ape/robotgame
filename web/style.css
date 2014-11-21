@@ -1,7 +1,7 @@
 body {
 	text-align: center;
-	color: #cccccc;
-	background-color: #000000;
+	color: hsl(0, 0%, 85%);
+	background-color: hsl(0, 0%, 5%);
 }
 
 #game {
@@ -9,7 +9,8 @@ body {
 	width: 800px;
 	height: 600px;
 	margin: auto;
-	background-color: #cccccc;
+	background-color: hsl(0, 0%, 85%);
+	border: 1px solid hsl(0, 0%, 65%);
 }
 
 #message {
@@ -18,7 +19,39 @@ body {
 	left: 0;
 	right: 0;
 	margin: auto;
-	color: #000000;
+	color: hsl(0, 0%, 5%);
 	font-size: 26px;
 	font-family: sans;
+}
+
+#commandtable {
+	margin: auto;
+	display: inline-block;
+}
+
+#commandtable tr {
+	display: block;
+	float: left;
+}
+
+#commandtable td {
+	display: block;
+}
+
+#commandtable button {
+	width: 100%;
+	border: 1px solid hsl(0, 0%, 65%);
+	background-color: hsl(0, 0%, 85%);
+}
+
+#commandtable button:hover {
+	background-color: hsl(0, 0%, 100%);
+}
+
+#commandtable button.selected {
+	background-color: hsl(120, 100%, 85%);
+}
+
+#commandtable button.ready {
+	height: 30px;
 }

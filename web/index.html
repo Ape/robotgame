@@ -1,55 +1,43 @@
-<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en" ng-app="robotgame">
 <head>
-	<title>Robotgame</title>
 	<meta charset="utf-8">
+	<title>Robotgame</title>
 	<link type="text/css" rel="stylesheet" media="all" href="style.css" />
 	<script src="config.js"></script>
+	<script src="lib/angular.min.js"></script>
 	<script src="lib/pixi.js"></script>
 	<script src="lib/socket.io.js"></script>
-	<script src="src/main.js"></script>
+	<script src="js/controller.js"></script>
+	<script src="js/directives.js"></script>
+	<script src="js/model.js"></script>
+	<script src="js/graphics.js"></script>
 </head>
-<body>
+
+<body ng-controller="RobotGameCtrl">
 	<h1>Robotgame</h1>
-	<div id="game">
-		<div id="message">Loading...</div>
+
+	<div id="game" append-element="game">
+		<div id="message">{{message}}</div>
 	</div>
-	<select id="command1">
-		<option value="stop">Stop</option>
-		<option value="forward">Move forward</option>
-		<option value="reverse">Reverse</option>
-		<option value="turnleft">Turn left</option>
-		<option value="turnright">Turn right</option>
-		<option value="turnleftslow">Turn left slowly</option>
-		<option value="turnrightslow">Turn right slowly</option>
-	</select>
-	<select id="command2">
-		<option value="stop">Stop</option>
-		<option value="forward">Move forward</option>
-		<option value="reverse">Reverse</option>
-		<option value="turnleft">Turn left</option>
-		<option value="turnright">Turn right</option>
-		<option value="turnleftslow">Turn left slowly</option>
-		<option value="turnrightslow">Turn right slowly</option>
-	</select>
-	<select id="command3">
-		<option value="stop">Stop</option>
-		<option value="forward">Move forward</option>
-		<option value="reverse">Reverse</option>
-		<option value="turnleft">Turn left</option>
-		<option value="turnright">Turn right</option>
-		<option value="turnleftslow">Turn left slowly</option>
-		<option value="turnrightslow">Turn right slowly</option>
-	</select>
-	<select id="command4">
-		<option value="stop">Stop</option>
-		<option value="forward">Move forward</option>
-		<option value="reverse">Reverse</option>
-		<option value="turnleft">Turn left</option>
-		<option value="turnright">Turn right</option>
-		<option value="turnleftslow">Turn left slowly</option>
-		<option value="turnrightslow">Turn right slowly</option>
-	</select>
-	<input type="checkbox" id="ready">Ready</input>
+
+	<div id="commandtable" ng-show="connected">
+		<table>
+			<tr ng-repeat="(command, selectedCommand) in commands track by $index">
+				<td ng-repeat="option in commandOptions">
+					<button ng-click="selectCommand(command, option[0])"
+					        ng-class="{'selected': selectedCommand == option[0]}">
+						{{option[1]}}
+					</button>
+				</td>
+			</tr>
+		</table>
+
+		<button ng-click="toggleReady()"
+				ng-class="{'selected': ready}"
+				class="ready">
+			Ready!
+		</button>
+	</div>
 </body>
 </html>
