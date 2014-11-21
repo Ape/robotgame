@@ -30,7 +30,8 @@ io.on('connection', function(socket) {
 	var robot = createRobot(robots.length);
 	robots.push(robot);
 
-	sendUpdate([ getCurrentFrame() ]);
+	var update = createUpdate([getCurrentFrame()]);
+	socket.emit('update', update);
 
 	socket.on('disconnect', function() {
 		console.log('Player from ' + socket.handshake.address + ' disconnected.');
@@ -101,16 +102,15 @@ function update() {
 	});
 
 	var frames = runTurn();
-	sendUpdate(frames);
+	var update = createUpdate(frames);
+	io.sockets.emit('update', update);
 };
 
-function sendUpdate(frames) {
-	var update = {
+function createUpdate(frames) {
+	return {
 		timestep: 1000 * TIMESTEP,
 		frames: frames,
 	};
-
-	io.sockets.emit('update', update);
 }
 
 function createWalls() {
