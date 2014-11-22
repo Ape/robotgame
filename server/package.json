@@ -2,7 +2,7 @@
 	"name": "robotgame-server",
 	"private": true,
 	"scripts": {
-		"start": "node main.js"
+		"start": "node app/main.js"
 	},
 	"dependencies": {
 		"socket.io": "*",
