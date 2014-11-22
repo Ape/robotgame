@@ -1,92 +1,61 @@
 var PORT = 33668;
-var ARENA_WIDTH = 20; // m
-var ARENA_HEIGHT = 15; // m
 var TURN_TIMEOUT = 10; // s
-var TIMESTEP = 1/60; // s
-var COMMAND_TIME = 60 * TIMESTEP;
-var SLOWDOWN_TIME = 18 * TIMESTEP;
 var COMMANDS = 4;
-var VELOCITY_ITERATIONS = 6;
-var POSITION_ITERATIONS = 2;
-var ROBOT_SIZE = 1; // m
-var ROBOT_SPEED = 2.0; // m/s
-var ROBOT_SPEED_REVERSE = 1.0; // m/s
-var ROBOT_ANGULAR_SPEED = Math.PI/2; // radians/s
-var LATERAL_FRICTION = 10.0;
 
 var http = require('http');
 var io = require('socket.io')(http, {serveClient: false});
 var box2d = require('./box2d-extended.js').box2d;
+var worldFactory = require('./world.js');
 
-var world = new box2d.b2World(new box2d.b2Vec2(0.0, 0.0));
-createWalls();
-var robots = {};
+var players = [];
+var world = worldFactory.create();
 var turnTimeout = null;
 
 io.listen(PORT);
 io.on('connection', function(socket) {
 	console.log('Player from ' + socket.handshake.address + ' connected.');
 
-	var robot = createRobot();
-	var robotId = nextRobotId();
-	console.log(robotId);
-	robots[robotId] = robot;
+	var player = {
+		robotId: world.createRobot(),
+		ready: false,
+		commands: getInitialCommands(),
+	};
+	players.push(player);
 
-	var update = createUpdate([getCurrentFrame()]);
+	var update = createUpdate([world.getFrame()]);
 	socket.emit('update', update);
 
 	socket.on('disconnect', function() {
 		console.log('Player from ' + socket.handshake.address + ' disconnected.');
-
-		world.DestroyBody(robot.body);
-		delete robots[robotId];
-
+		world.removeRobot(player.robotId);
 		checkTurnEnd();
 	});
 
 	socket.on('commands', function(commands) {
-		robot.commands = commands.commands;
-		robot.ready = commands.ready;
+		player.ready = commands.ready;
+		player.commands = commands.commands;
 		checkTurnEnd();
 	});
 });
 
-function nextRobotId() {
-	var id = 0;
+function getInitialCommands() {
+	var commands = [];
 
-	while (id in robots) {
-		id++;
+	for (var i = 0; i < COMMANDS; i++) {
+		commands.push('stop');
 	}
 
-	return id;
-}
-
-function numberOfRobots() {
-	return Object.keys(robots).length;
-}
-
-function forEachRobot(action) {
-	for (id in robots) {
-		action(robots[id], parseInt(id));
-	}
-}
-
-function getTimeoutRemaining(timeout) {
-	if (timeout == null) {
-		return null;
-	}
-
-	return Math.ceil((timeout._idleStart + timeout._idleTimeout - Date.now()) / 1000);
+	return commands;
 }
 
 function checkTurnEnd() {
-	if (numberOfRobots() == 0) {
+	if (players.length == 0) {
 		return;
 	}
 
 	var notReady = 0;
-	forEachRobot(function(robot) {
-		if (!robot.ready) {
+	players.forEach(function(player) {
+		if (!player.ready) {
 			notReady++;
 		}
 	});
@@ -94,7 +63,7 @@ function checkTurnEnd() {
 	if (notReady == 0) {
 		update();
 	} else {
-		if (notReady == numberOfRobots()) {
+		if (notReady == players.length) {
 			stopTurnTimeout();
 		} else if (!turnTimeout) {
 			turnTimeout = setTimeout(update, TURN_TIMEOUT * 1000);
@@ -112,172 +81,46 @@ function stopTurnTimeout() {
 	turnTimeout = null;
 }
 
+function getTimeoutRemaining(timeout) {
+	if (timeout == null) {
+		return null;
+	}
+
+	return Math.ceil((timeout._idleStart + timeout._idleTimeout - Date.now()) / 1000);
+}
+
 function update() {
 	stopTurnTimeout();
 
-	forEachRobot(function(robot) {
-		robot.ready = false;
+	players.forEach(function(player) {
+		player.ready = false;
 	});
 
-	var frames = runTurn();
+	var frames = world.runTurn(getCommandList());
 	var update = createUpdate(frames);
 	io.sockets.emit('update', update);
 };
 
+function getCommandList() {
+	var commandList = [];
+
+	for (var i = 0; i < COMMANDS; i++) {
+		var commands = {};
+
+		players.forEach(function(player) {
+			commands[player.robotId] = player.commands[i];
+		});
+
+		commandList.push(commands);
+	}
+
+	return commandList;
+}
+
 function createUpdate(frames) {
 	return {
 		commands: COMMANDS,
-		timestep: 1000 * TIMESTEP,
+		timestep: 1000 * world.getTimestep(),
 		frames: frames,
 	};
-}
-
-function createWalls() {
-	createWall(new box2d.b2Vec2(0.0, 0.0), new box2d.b2Vec2(ARENA_WIDTH, 0.0));
-	createWall(new box2d.b2Vec2(ARENA_WIDTH, 0.0), new box2d.b2Vec2(ARENA_WIDTH, ARENA_HEIGHT));
-	createWall(new box2d.b2Vec2(ARENA_WIDTH, ARENA_HEIGHT), new box2d.b2Vec2(0.0, ARENA_HEIGHT));
-	createWall(new box2d.b2Vec2(0.0, ARENA_HEIGHT), new box2d.b2Vec2(0.0, 0.0));
-}
-
-function createWall(startPoint, endPoint) {
-	var shape = new box2d.b2EdgeShape();
-	shape.Set(startPoint, endPoint);
-
-	var bodyDef = new box2d.b2BodyDef();
-	bodyDef.set_type(box2d.b2_staticBody);
-	var body = world.CreateBody(bodyDef);
-	body.CreateFixture(shape, 0.0);
-}
-
-function createRobot() {
-	var position = new box2d.b2Vec2(Math.random() * ARENA_WIDTH, Math.random() * ARENA_HEIGHT);
-
-	var shape = new box2d.b2PolygonShape();
-	var size = ROBOT_SIZE / 2;
-	shape.SetAsBox(size, size);
-
-	var bodyDef = new box2d.b2BodyDef();
-	bodyDef.set_type(box2d.b2_dynamicBody);
-	bodyDef.set_position(position);
-	bodyDef.set_angle(Math.PI);
-	var body = world.CreateBody(bodyDef);
-	body.CreateFixture(shape, 5.0);
-
-	return {
-		body: body,
-		ready: false,
-		commands: ['stop', 'stop', 'stop', 'stop'],
-	};
-}
-
-function runTurn() {
-	var frames = [];
-
-	for (var commandNumber = 0; commandNumber < COMMANDS; commandNumber++) {
-		forEachRobot(function(robot) {
-			handleCommand(robot, robot.commands[commandNumber]);
-		});
-
-		simulate(frames, COMMAND_TIME / TIMESTEP);
-
-		forEachRobot(function(robot) {
-			slowDown(robot);
-		});
-
-		simulate(frames, SLOWDOWN_TIME / TIMESTEP);
-	}
-
-	return frames;
-}
-
-function simulate(frames, steps) {
-	for (var step = 0; step < steps; step++) {
-		forEachRobot(function(robot) {
-			applyFriction(robot);
-		});
-
-		world.Step(TIMESTEP, VELOCITY_ITERATIONS, POSITION_ITERATIONS);
-
-		frames.push(getCurrentFrame());
-	}
-}
-
-function getCurrentFrame() {
-	var robotInfo = [];
-
-	forEachRobot(function(robot, id) {
-		position = robot.body.GetPosition();
-
-		robotInfo.push({
-			id: id,
-			position: {
-				x: position.get_x(),
-				y: position.get_y(),
-			},
-			rotation: robot.body.GetAngle(),
-		});
-	});
-
-	return {robots: robotInfo};
-}
-
-function getRelativeVelocity(robot) {
-	return robot.body.GetLinearVelocity().copy().rotate(-robot.body.GetAngle());
-}
-
-function slowDown(robot) {
-	var impulse = new box2d.b2Vec2(0.0, -getRelativeVelocity(robot).get_y() * robot.body.GetMass())
-			.rotate(robot.body.GetAngle());
-	robot.body.ApplyLinearImpulse(impulse, robot.body.GetPosition());
-
-	applyAngularImpulse(robot, -limitValue(robot.body.GetAngularVelocity(), -ROBOT_ANGULAR_SPEED, ROBOT_ANGULAR_SPEED));
-}
-
-function limitValue(value, min, max) {
-	return Math.max(min, Math.min(max, value));
-}
-
-function handleCommand(robot, command) {
-	switch (command) {
-	case 'forward':
-		applyImpulse(robot, ROBOT_SPEED);
-		break;
-
-	case 'reverse':
-		applyImpulse(robot, -ROBOT_SPEED_REVERSE);
-		break;
-
-	case 'turnleft':
-		applyAngularImpulse(robot, -ROBOT_ANGULAR_SPEED);
-		break;
-
-	case 'turnright':
-		applyAngularImpulse(robot, ROBOT_ANGULAR_SPEED);
-		break;
-
-	case 'turnleftslow':
-		applyAngularImpulse(robot, -ROBOT_ANGULAR_SPEED/2);
-		break;
-
-	case 'turnrightslow':
-		applyAngularImpulse(robot, ROBOT_ANGULAR_SPEED/2);
-		break;
-	}
-}
-
-function applyImpulse(robot, speed) {
-	var impulse = new box2d.b2Vec2(0.0, speed * robot.body.GetMass()).rotate(robot.body.GetAngle());
-	robot.body.ApplyLinearImpulse(impulse, robot.body.GetPosition());
-}
-
-function applyAngularImpulse(robot, angularSpeed) {
-	robot.body.ApplyAngularImpulse(angularSpeed * robot.body.GetInertia());
-}
-
-function applyFriction(robot) {
-	var frictionalForce = getRelativeVelocity(robot).copy()
-			.mul(new box2d.b2Vec2(-LATERAL_FRICTION, 0))
-			.rotate(robot.body.GetAngle());
-
-	robot.body.ApplyForceToCenter(frictionalForce);
 }
