@@ -11,7 +11,7 @@ angular.module('robotgame', ['directives', 'model', 'graphics'])
 	});
 
 	$scope.toggleReady = function() {
-		$scope.ready ^= true;
+		$scope.ready = !$scope.ready;
 		sendCommands();
 	};
 
