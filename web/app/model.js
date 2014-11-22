@@ -20,7 +20,7 @@ angular.module('model', [])
 	};
 
 	this.hasUpdate = function() {
-		return update != null;
+		return update !== null;
 	};
 
 	this.getUpdateTime = function() {
@@ -40,7 +40,7 @@ angular.module('model', [])
 	};
 
 	this.hasStatus = function() {
-		return status != null;
+		return status !== null;
 	};
 
 	this.getNotReady = function() {
@@ -67,7 +67,7 @@ angular.module('model', [])
 	}
 
 	function onStatus(data) {
-		if (data.timeout != null) {
+		if (data.timeout !== null) {
 			var timeout = new Date();
 			timeout.setSeconds(timeout.getSeconds() + data.timeout);
 
@@ -81,4 +81,4 @@ angular.module('model', [])
 
 		$rootScope.$broadcast('status');
 	}
-})
+});

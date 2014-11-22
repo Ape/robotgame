@@ -64,7 +64,7 @@ exports.Game = function(port) {
 	}
 
 	function checkTurnEnd() {
-		if (utils.tableLength(players) == 0) {
+		if (utils.tableLength(players) === 0) {
 			return;
 		}
 
@@ -75,7 +75,7 @@ exports.Game = function(port) {
 			}
 		});
 
-		if (notReady == 0) {
+		if (notReady === 0) {
 			update();
 		} else {
 			if (notReady == utils.tableLength(players)) {
@@ -97,7 +97,7 @@ exports.Game = function(port) {
 	}
 
 	function getTurnTimeoutRemaining() {
-		if (turnTimeout == null) {
+		if (turnTimeout === null) {
 			return null;
 		}
 
@@ -112,8 +112,8 @@ exports.Game = function(port) {
 		});
 
 		var frames = world.runTurn(getCommandList());
-		var update = createUpdate(frames);
-		io.sockets.emit('update', update);
+		var data = createUpdate(frames);
+		io.sockets.emit('update', data);
 	}
 
 	function getCommandList() {

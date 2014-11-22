@@ -62,4 +62,4 @@ angular.module('robotgame', ['directives', 'model', 'graphics'])
 			$scope.commands.push('stop');
 		}
 	}
-})
+});

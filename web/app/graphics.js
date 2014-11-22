@@ -104,4 +104,4 @@ angular.module('graphics', ['model'])
 
 		return filter;
 	}
-})
+});
