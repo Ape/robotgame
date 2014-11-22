@@ -33,7 +33,7 @@ exports.Game = function(port) {
 				socket: socket,
 				robotId: world.createRobot(),
 				ready: false,
-				commands: getInitialCommands(),
+				commands: _.range(COMMANDS_PER_TURN).map(function() {return 'stop';}),
 			};
 			players[playerId] = player;
 
@@ -55,27 +55,12 @@ exports.Game = function(port) {
 		});
 	}
 
-	function getInitialCommands() {
-		var commands = [];
-
-		for (var i = 0; i < COMMANDS_PER_TURN; i++) {
-			commands.push('stop');
-		}
-
-		return commands;
-	}
-
 	function checkTurnEnd() {
 		if (_.size(players) === 0) {
 			return;
 		}
 
-		var notReady = 0;
-		_(players).forEach(function(player) {
-			if (!player.ready) {
-				notReady++;
-			}
-		});
+		var notReady = _.where(players, {'ready': false}).length;
 
 		if (notReady === 0) {
 			update();
@@ -109,31 +94,22 @@ exports.Game = function(port) {
 	function update() {
 		stopTurnTimeout();
 
-		_(players).forEach(function(player) {
+		_.forEach(players, function(player) {
 			player.ready = false;
 		});
 
 		var frames = world.runTurn(getCommandList());
 
-		_(players).forEach(function(player) {
+		_.forEach(players, function(player) {
 			player.socket.emit('update', createUpdate(player, frames));
 		});
 	}
 
 	function getCommandList() {
-		var commandList = [];
-
-		for (var i = 0; i < COMMANDS_PER_TURN; i++) {
-			var commands = {};
-
-			_(players).forEach(function(player) {
-				commands[player.robotId] = player.commands[i];
-			});
-
-			commandList.push(commands);
-		}
-
-		return commandList;
+		return _.range(COMMANDS_PER_TURN).map(function(commandNumber) {
+			return _.zipObject(_.pluck(players, 'robotId'),
+			                   _.chain(players).pluck('commands').pluck(commandNumber).value());
+		});
 	}
 
 	function createUpdate(player, frames) {

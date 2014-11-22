@@ -3,8 +3,8 @@ var box2d = require('./box2d-extended.js').box2d;
 var Robot = require('./robot.js').Robot;
 
 var TIMESTEP = 1.0/60.0; // s
-var COMMAND_FRAMES = 60;
-var SLOWDOWN_FRAMES = 15;
+var NUM_COMMAND_FRAMES = 60;
+var NUM_SLOWDOWN_FRAMES = 15;
 var ARENA_WIDTH = 20.0; // m
 var ARENA_HEIGHT = 15.0; // m
 var GRAVITY = new box2d.b2Vec2(0.0, 0.0); // m/s^2
@@ -38,40 +38,21 @@ exports.World = function() {
 	};
 
 	this.getFrame = function() {
-		var robotInfo = [];
-
-		_(robots).forEach(function(robot, id) {
-			robotInfo.push({
-				id: parseInt(id),
-				position: {
-					x: robot.getPosition().get_x(),
-					y: robot.getPosition().get_y(),
-				},
-				rotation: robot.getRotation(),
-			});
-		});
-
-		return {robots: robotInfo};
+		return {robots: _.map(robots, getRobotUpdate)};
 	};
 
 	this.runTurn = function(commandList) {
-		var frames = [];
-
-		commandList.forEach(function(commands) {
-			_(robots).forEach(function(robot, robotId) {
+		return _.reduce(commandList, function(frames, commands) {
+			frames = frames.concat(simulate(function(robot, robotId) {
 				robot.executeCommand(commands[parseInt(robotId)]);
-			});
+			}, NUM_COMMAND_FRAMES));
 
-			simulate(frames, COMMAND_FRAMES);
-
-			_(robots).forEach(function(robot) {
+			frames = frames.concat(simulate(function(robot) {
 				robot.slowDown();
-			});
+			}, NUM_SLOWDOWN_FRAMES));
 
-			simulate(frames, SLOWDOWN_FRAMES);
-		});
-
-		return frames;
+			return frames;
+		}, []);
 	};
 
 	function init() {
@@ -112,15 +93,30 @@ exports.World = function() {
 		body.CreateFixture(fixtureDef);
 	}
 
-	function simulate(frameList, numberOfFrames) {
-		for (var frame = 0; frame < numberOfFrames; frame++) {
-			_(robots).forEach(function(robot) {
+	function getRobotUpdate(robot, id) {
+		return {
+			id: parseInt(id),
+			position: {
+				x: robot.getPosition().get_x(),
+				y: robot.getPosition().get_y(),
+			},
+			rotation: robot.getRotation(),
+		};
+	}
+
+	function simulate(action, numberOfFrames) {
+		_.forEach(robots, function(robot, robotId) {
+			action(robot, robotId);
+		});
+
+		return _.range(numberOfFrames).map(function(frame) {
+			_.forEach(robots, function(robot) {
 				robot.simulate();
 			});
 
 			world.Step(TIMESTEP, VELOCITY_ITERATIONS, POSITION_ITERATIONS);
 
-			frameList.push(self.getFrame());
-		}
+			return self.getFrame();
+		});
 	}
 };
