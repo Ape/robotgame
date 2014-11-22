@@ -8,6 +8,8 @@ var SLOWDOWN_FRAMES = 15;
 var ARENA_WIDTH = 20.0; // m
 var ARENA_HEIGHT = 15.0; // m
 var GRAVITY = new box2d.b2Vec2(0.0, 0.0); // m/s^2
+var WALL_FRICTION = 0.2;
+var WALL_RESTITUTION = 0.1;
 var VELOCITY_ITERATIONS = 6;
 var POSITION_ITERATIONS = 2;
 
@@ -96,13 +98,18 @@ exports.World = function() {
 	}
 
 	function createWall(startPoint, endPoint) {
+		var bodyDef = new box2d.b2BodyDef();
+		bodyDef.set_type(box2d.b2_staticBody);
+		body = world.CreateBody(bodyDef);
+
 		var shape = new box2d.b2EdgeShape();
 		shape.Set(startPoint, endPoint);
 
-		var bodyDef = new box2d.b2BodyDef();
-		bodyDef.set_type(box2d.b2_staticBody);
-		var body = world.CreateBody(bodyDef);
-		body.CreateFixture(shape, 0.0);
+		var fixtureDef = new box2d.b2FixtureDef();
+		fixtureDef.set_shape(shape);
+		fixtureDef.set_friction(WALL_FRICTION);
+		fixtureDef.set_restitution(WALL_RESTITUTION);
+		body.CreateFixture(fixtureDef);
 	}
 
 	function simulate(frameList, numberOfFrames) {

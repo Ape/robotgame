@@ -2,6 +2,9 @@ var utils = require('./utils.js');
 var box2d = require('./box2d-extended.js').box2d;
 
 var SIZE = 1.0; // m
+var DENSITY = 5.0; // kg/m^2
+var FRICTION = 0.2;
+var RESTITUTION = 0.1;
 var SPEED = 2.0; // m/s
 var SPEED_REVERSE = 1.0; // m/s
 var ANGULAR_SPEED = Math.PI/2; // radians/s
@@ -62,17 +65,21 @@ exports.Robot = function(world, position) {
 	};
 
 	function init(position) {
-		var shape = new box2d.b2PolygonShape();
-		var size = SIZE / 2;
-		shape.SetAsBox(size, size);
-
 		var bodyDef = new box2d.b2BodyDef();
 		bodyDef.set_type(box2d.b2_dynamicBody);
 		bodyDef.set_position(position);
 		bodyDef.set_angle(Math.PI);
-
 		body = world.CreateBody(bodyDef);
-		body.CreateFixture(shape, 5.0);
+
+		var shape = new box2d.b2PolygonShape();
+		shape.SetAsBox(SIZE / 2, SIZE / 2);
+
+		var fixtureDef = new box2d.b2FixtureDef();
+		fixtureDef.set_shape(shape);
+		fixtureDef.set_density(DENSITY);
+		fixtureDef.set_friction(FRICTION);
+		fixtureDef.set_restitution(RESTITUTION);
+		body.CreateFixture(fixtureDef);
 	}
 
 	function getRelativeVelocity() {
