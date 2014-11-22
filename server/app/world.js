@@ -1,4 +1,5 @@
 var box2d = require('./box2d-extended.js').box2d;
+var utils = require('./utils.js');
 var Robot = require('./robot.js').Robot;
 
 var TIMESTEP = 1.0/60.0; // s
@@ -37,9 +38,9 @@ function World() {
 	this.getFrame = function() {
 		var robotInfo = [];
 
-		forEachRobot(function(robot, id) {
+		utils.tableForEach(robots, function(robot, id) {
 			robotInfo.push({
-				id: id,
+				id: parseInt(id),
 				position: {
 					x: robot.getPosition().get_x(),
 					y: robot.getPosition().get_y(),
@@ -55,13 +56,13 @@ function World() {
 		var frames = [];
 
 		commandList.forEach(function(commands) {
-			forEachRobot(function(robot, robotId) {
-				robot.executeCommand(commands[robotId]);
+			utils.tableForEach(robots, function(robot, robotId) {
+				robot.executeCommand(commands[parseInt(robotId)]);
 			});
 
 			simulate(frames, COMMAND_FRAMES);
 
-			forEachRobot(function(robot) {
+			utils.tableForEach(robots, function(robot) {
 				robot.slowDown();
 			});
 
@@ -87,12 +88,6 @@ function World() {
 		return id;
 	}
 
-	function forEachRobot(action) {
-		for (id in robots) {
-			action(robots[id], parseInt(id));
-		}
-	}
-
 	function createWalls() {
 		createWall(new box2d.b2Vec2(0.0, 0.0), new box2d.b2Vec2(ARENA_WIDTH, 0.0));
 		createWall(new box2d.b2Vec2(ARENA_WIDTH, 0.0), new box2d.b2Vec2(ARENA_WIDTH, ARENA_HEIGHT));
@@ -112,7 +107,7 @@ function World() {
 
 	function simulate(frameList, numberOfFrames) {
 		for (var frame = 0; frame < numberOfFrames; frame++) {
-			forEachRobot(function(robot) {
+			utils.tableForEach(robots, function(robot) {
 				robot.simulate();
 			});
 
