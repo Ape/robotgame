@@ -4,7 +4,7 @@ var utils = require('./utils.js');
 var World = require('./world.js').World;
 
 var TURN_TIMEOUT = 10; // s
-var COMMANDS = 4;
+var COMMANDS_PER_TURN = 4;
 
 exports.Game = function(port) {
 	var players;
@@ -29,13 +29,14 @@ exports.Game = function(port) {
 
 			var playerId = nextPlayerId++;
 			var player = {
+				socket: socket,
 				robotId: world.createRobot(),
 				ready: false,
 				commands: getInitialCommands(),
 			};
 			players[playerId] = player;
 
-			var update = createUpdate([world.getFrame()]);
+			var update = createUpdate(player, [world.getFrame()]);
 			socket.emit('update', update);
 
 			socket.on('disconnect', function() {
@@ -56,7 +57,7 @@ exports.Game = function(port) {
 	function getInitialCommands() {
 		var commands = [];
 
-		for (var i = 0; i < COMMANDS; i++) {
+		for (var i = 0; i < COMMANDS_PER_TURN; i++) {
 			commands.push('stop');
 		}
 
@@ -112,14 +113,16 @@ exports.Game = function(port) {
 		});
 
 		var frames = world.runTurn(getCommandList());
-		var data = createUpdate(frames);
-		io.sockets.emit('update', data);
+
+		utils.tableForEach(players, function(player) {
+			player.socket.emit('update', createUpdate(player, frames));
+		});
 	}
 
 	function getCommandList() {
 		var commandList = [];
 
-		for (var i = 0; i < COMMANDS; i++) {
+		for (var i = 0; i < COMMANDS_PER_TURN; i++) {
 			var commands = {};
 
 			utils.tableForEach(players, function(player) {
@@ -132,9 +135,9 @@ exports.Game = function(port) {
 		return commandList;
 	}
 
-	function createUpdate(frames) {
+	function createUpdate(player, frames) {
 		return {
-			commands: COMMANDS,
+			commands: player.commands,
 			timestep: 1000 * world.getTimestep(),
 			frames: frames,
 		};

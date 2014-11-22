@@ -27,7 +27,7 @@ angular.module('robotgame', ['directives', 'model', 'graphics'])
 	$scope.$on('update', function() {
 		$scope.$apply(function() {
 			if (!$scope.connected) {
-				resetCommands();
+				$scope.commands = Model.getCommands();
 			}
 
 			$scope.connected = true;
@@ -53,13 +53,5 @@ angular.module('robotgame', ['directives', 'model', 'graphics'])
 
 	function sendCommands() {
 		Model.sendCommands($scope.commands, $scope.ready);
-	}
-
-	function resetCommands() {
-		$scope.commands = [];
-
-		for (var i = 0; i < Model.getCommands(); i++) {
-			$scope.commands.push('stop');
-		}
 	}
 });
