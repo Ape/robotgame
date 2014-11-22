@@ -4,10 +4,10 @@ var uglify = require('gulp-uglify');
 var concat = require('gulp-concat');
 
 var sources = [
-	'app/**/*.js',
 	'node_modules/angular/angular.js',
-	'node_modules/pixi.js/bin/pixi.js',
+	'node_modules/pixi.js/bin/pixi.dev.js',
 	'node_modules/socket.io-client/socket.io.js',
+	'app/**/*.js',
 ];
 
 gulp.task('scripts', function() {
