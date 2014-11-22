@@ -1,0 +1,11 @@
+{
+	"name": "robotgame-server",
+	"private": true,
+	"scripts": {
+		"start": "node main.js"
+	},
+	"dependencies": {
+		"socket.io": "*",
+		"box2d.js": "*"
+	}
+}

@@ -1,4 +1,4 @@
-var box2d = require('./lib/box2d.js');
+var box2d = require('box2d.js').Box2D;
 
 exports.box2d = box2d;
 
