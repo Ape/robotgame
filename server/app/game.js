@@ -1,3 +1,4 @@
+var _ = require('lodash');
 var http = require('http');
 var io = require('socket.io')(http, {serveClient: false});
 var utils = require('./utils.js');
@@ -65,12 +66,12 @@ exports.Game = function(port) {
 	}
 
 	function checkTurnEnd() {
-		if (utils.tableLength(players) === 0) {
+		if (_.size(players) === 0) {
 			return;
 		}
 
 		var notReady = 0;
-		utils.tableForEach(players, function(player) {
+		_(players).forEach(function(player) {
 			if (!player.ready) {
 				notReady++;
 			}
@@ -79,7 +80,7 @@ exports.Game = function(port) {
 		if (notReady === 0) {
 			update();
 		} else {
-			if (notReady == utils.tableLength(players)) {
+			if (notReady === _.size(players)) {
 				stopTurnTimeout();
 			} else if (!turnTimeout) {
 				turnTimeout = setTimeout(update, TURN_TIMEOUT * 1000);
@@ -108,13 +109,13 @@ exports.Game = function(port) {
 	function update() {
 		stopTurnTimeout();
 
-		utils.tableForEach(players, function(player) {
+		_(players).forEach(function(player) {
 			player.ready = false;
 		});
 
 		var frames = world.runTurn(getCommandList());
 
-		utils.tableForEach(players, function(player) {
+		_(players).forEach(function(player) {
 			player.socket.emit('update', createUpdate(player, frames));
 		});
 	}
@@ -125,7 +126,7 @@ exports.Game = function(port) {
 		for (var i = 0; i < COMMANDS_PER_TURN; i++) {
 			var commands = {};
 
-			utils.tableForEach(players, function(player) {
+			_(players).forEach(function(player) {
 				commands[player.robotId] = player.commands[i];
 			});
 

@@ -1,5 +1,5 @@
+var _ = require('lodash');
 var box2d = require('./box2d-extended.js').box2d;
-var utils = require('./utils.js');
 var Robot = require('./robot.js').Robot;
 
 var TIMESTEP = 1.0/60.0; // s
@@ -40,7 +40,7 @@ exports.World = function() {
 	this.getFrame = function() {
 		var robotInfo = [];
 
-		utils.tableForEach(robots, function(robot, id) {
+		_(robots).forEach(function(robot, id) {
 			robotInfo.push({
 				id: parseInt(id),
 				position: {
@@ -58,13 +58,13 @@ exports.World = function() {
 		var frames = [];
 
 		commandList.forEach(function(commands) {
-			utils.tableForEach(robots, function(robot, robotId) {
+			_(robots).forEach(function(robot, robotId) {
 				robot.executeCommand(commands[parseInt(robotId)]);
 			});
 
 			simulate(frames, COMMAND_FRAMES);
 
-			utils.tableForEach(robots, function(robot) {
+			_(robots).forEach(function(robot) {
 				robot.slowDown();
 			});
 
@@ -114,7 +114,7 @@ exports.World = function() {
 
 	function simulate(frameList, numberOfFrames) {
 		for (var frame = 0; frame < numberOfFrames; frame++) {
-			utils.tableForEach(robots, function(robot) {
+			_(robots).forEach(function(robot) {
 				robot.simulate();
 			});
 
