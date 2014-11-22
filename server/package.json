@@ -5,7 +5,7 @@
 		"start": "node app/main.js"
 	},
 	"dependencies": {
-		"socket.io": "*",
-		"box2d.js": "*"
+		"socket.io": "^1.2.1",
+		"box2d.js": "^1.0.0"
 	}
 }
