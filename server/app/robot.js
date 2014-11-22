@@ -1,3 +1,4 @@
+var utils = require('./utils.js');
 var box2d = require('./box2d-extended.js').box2d;
 
 var SIZE = 1.0; // m
@@ -56,7 +57,7 @@ exports.Robot = function(world, position) {
 				.rotate(body.GetAngle());
 		body.ApplyLinearImpulse(impulse, body.GetPosition());
 
-		applyAngularImpulse(-limitValue(body.GetAngularVelocity(), -ANGULAR_SPEED, ANGULAR_SPEED));
+		applyAngularImpulse(-utils.limitValue(body.GetAngularVelocity(), -ANGULAR_SPEED, ANGULAR_SPEED));
 	};
 
 	this.simulate = function() {
@@ -79,10 +80,6 @@ exports.Robot = function(world, position) {
 
 	function getRelativeVelocity() {
 		return body.GetLinearVelocity().copy().rotate(-body.GetAngle());
-	}
-
-	function limitValue(value, min, max) {
-		return Math.max(min, Math.min(max, value));
 	}
 
 	function applyImpulse(speed) {

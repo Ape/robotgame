@@ -4,6 +4,7 @@ var COMMANDS = 4;
 
 var http = require('http');
 var io = require('socket.io')(http, {serveClient: false});
+var utils = require('./utils.js');
 var box2d = require('./box2d-extended.js').box2d;
 var worldFactory = require('./world.js');
 
@@ -70,7 +71,7 @@ function checkTurnEnd() {
 		}
 
 		io.sockets.emit('status', {
-			timeout: getTimeoutRemaining(turnTimeout),
+			timeout: getTurnTimeoutRemaining(),
 			notReady: notReady
 		});
 	}
@@ -81,12 +82,12 @@ function stopTurnTimeout() {
 	turnTimeout = null;
 }
 
-function getTimeoutRemaining(timeout) {
-	if (timeout == null) {
+function getTurnTimeoutRemaining() {
+	if (turnTimeout == null) {
 		return null;
 	}
 
-	return Math.ceil((timeout._idleStart + timeout._idleTimeout - Date.now()) / 1000);
+	return Math.ceil(utils.timeoutRemaining(turnTimeout) / 1000);
 }
 
 function update() {

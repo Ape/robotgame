@@ -87,10 +87,6 @@ function World() {
 		return id;
 	}
 
-	function numberOfRobots() {
-		return Object.keys(robots).length;
-	}
-
 	function forEachRobot(action) {
 		for (id in robots) {
 			action(robots[id], parseInt(id));
