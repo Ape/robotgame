@@ -102,4 +102,4 @@ exports.Robot = function(world, position) {
 
 		body.ApplyForceToCenter(frictionalForce);
 	}
-}
+};

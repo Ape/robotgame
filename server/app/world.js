@@ -35,7 +35,7 @@ exports.World = function() {
 
 	this.getTimestep = function() {
 		return TIMESTEP;
-	}
+	};
 
 	this.getFrame = function() {
 		var robotInfo = [];
@@ -123,4 +123,4 @@ exports.World = function() {
 			frameList.push(self.getFrame());
 		}
 	}
-}
+};

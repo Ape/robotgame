@@ -102,7 +102,7 @@ function update() {
 	var frames = world.runTurn(getCommandList());
 	var update = createUpdate(frames);
 	io.sockets.emit('update', update);
-};
+}
 
 function getCommandList() {
 	var commandList = [];
