@@ -53,10 +53,7 @@ exports.Robot = function(world, position) {
 	};
 
 	this.slowDown = function() {
-		var impulse = new box2d.b2Vec2(0.0, -getRelativeVelocity().get_y() * body.GetMass())
-				.rotate(body.GetAngle());
-		body.ApplyLinearImpulse(impulse, body.GetPosition());
-
+		applyImpulse(-getRelativeVelocity().get_y());
 		applyAngularImpulse(-utils.limitValue(body.GetAngularVelocity(), -ANGULAR_SPEED, ANGULAR_SPEED));
 	};
 
