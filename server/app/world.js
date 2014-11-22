@@ -11,7 +11,7 @@ var GRAVITY = new box2d.b2Vec2(0.0, 0.0); // m/s^2
 var VELOCITY_ITERATIONS = 6;
 var POSITION_ITERATIONS = 2;
 
-function World() {
+exports.World = function() {
 	var self = this;
 	var robots;
 	var world;
@@ -117,7 +117,3 @@ function World() {
 		}
 	}
 }
-
-exports.create = function() {
-	return new World();
-};

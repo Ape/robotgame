@@ -6,11 +6,11 @@ var http = require('http');
 var io = require('socket.io')(http, {serveClient: false});
 var utils = require('./utils.js');
 var box2d = require('./box2d-extended.js').box2d;
-var worldFactory = require('./world.js');
+var World = require('./world.js').World;
 
 var players = {};
 var nextPlayerId = 0;
-var world = worldFactory.create();
+var world = new World();
 var turnTimeout = null;
 
 io.listen(PORT);
