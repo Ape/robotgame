@@ -68,7 +68,7 @@ exports.Robot = function(world, position) {
 		var bodyDef = new box2d.b2BodyDef();
 		bodyDef.set_type(box2d.b2_dynamicBody);
 		bodyDef.set_position(position);
-		bodyDef.set_angle(Math.PI);
+		bodyDef.set_angle(Math.random() * 2.0 * Math.PI);
 		body = world.CreateBody(bodyDef);
 
 		var shape = new box2d.b2PolygonShape();
