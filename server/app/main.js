@@ -1,5 +1,5 @@
 var Game = require('./game.js').Game;
 
-var PORT = 33668;
+var port = process.env.PORT || 33668;
 
-var game = new Game(PORT);
+var game = new Game(port);
