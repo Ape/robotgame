@@ -20,15 +20,17 @@ var box2d = require('./box2d-extended.js').box2d;
 
 var world = new box2d.b2World(new box2d.b2Vec2(0.0, 0.0));
 createWalls();
-var robots = [];
+var robots = {};
 var turnTimeout = null;
 
 io.listen(PORT);
 io.on('connection', function(socket) {
 	console.log('Player from ' + socket.handshake.address + ' connected.');
 
-	var robot = createRobot(robots.length);
-	robots.push(robot);
+	var robot = createRobot();
+	var robotId = nextRobotId();
+	console.log(robotId);
+	robots[robotId] = robot;
 
 	var update = createUpdate([getCurrentFrame()]);
 	socket.emit('update', update);
@@ -37,11 +39,7 @@ io.on('connection', function(socket) {
 		console.log('Player from ' + socket.handshake.address + ' disconnected.');
 
 		world.DestroyBody(robot.body);
-
-		var robotIndex = robots.indexOf(robot);
-		if (robotIndex >= 0) {
-			robots.splice(robotIndex, 1);
-		}
+		delete robots[robotId];
 
 		checkTurnEnd();
 	});
@@ -53,6 +51,26 @@ io.on('connection', function(socket) {
 	});
 });
 
+function nextRobotId() {
+	var id = 0;
+
+	while (id in robots) {
+		id++;
+	}
+
+	return id;
+}
+
+function numberOfRobots() {
+	return Object.keys(robots).length;
+}
+
+function forEachRobot(action) {
+	for (id in robots) {
+		action(robots[id], parseInt(id));
+	}
+}
+
 function getTimeoutRemaining(timeout) {
 	if (timeout == null) {
 		return null;
@@ -62,12 +80,12 @@ function getTimeoutRemaining(timeout) {
 }
 
 function checkTurnEnd() {
-	if (robots.length == 0) {
+	if (numberOfRobots() == 0) {
 		return;
 	}
 
 	var notReady = 0;
-	robots.forEach(function(robot) {
+	forEachRobot(function(robot) {
 		if (!robot.ready) {
 			notReady++;
 		}
@@ -76,7 +94,7 @@ function checkTurnEnd() {
 	if (notReady == 0) {
 		update();
 	} else {
-		if (notReady == robots.length) {
+		if (notReady == numberOfRobots()) {
 			stopTurnTimeout();
 		} else if (!turnTimeout) {
 			turnTimeout = setTimeout(update, TURN_TIMEOUT * 1000);
@@ -97,7 +115,7 @@ function stopTurnTimeout() {
 function update() {
 	stopTurnTimeout();
 
-	robots.forEach(function(robot) {
+	forEachRobot(function(robot) {
 		robot.ready = false;
 	});
 
@@ -131,7 +149,7 @@ function createWall(startPoint, endPoint) {
 	body.CreateFixture(shape, 0.0);
 }
 
-function createRobot(id) {
+function createRobot() {
 	var position = new box2d.b2Vec2(Math.random() * ARENA_WIDTH, Math.random() * ARENA_HEIGHT);
 
 	var shape = new box2d.b2PolygonShape();
@@ -146,7 +164,6 @@ function createRobot(id) {
 	body.CreateFixture(shape, 5.0);
 
 	return {
-		id: id,
 		body: body,
 		ready: false,
 		commands: ['stop', 'stop', 'stop', 'stop'],
@@ -157,13 +174,13 @@ function runTurn() {
 	var frames = [];
 
 	for (var commandNumber = 0; commandNumber < COMMANDS; commandNumber++) {
-		robots.forEach(function(robot) {
+		forEachRobot(function(robot) {
 			handleCommand(robot, robot.commands[commandNumber]);
 		});
 
 		simulate(frames, COMMAND_TIME / TIMESTEP);
 
-		robots.forEach(function(robot) {
+		forEachRobot(function(robot) {
 			slowDown(robot);
 		});
 
@@ -175,7 +192,7 @@ function runTurn() {
 
 function simulate(frames, steps) {
 	for (var step = 0; step < steps; step++) {
-		robots.forEach(function(robot) {
+		forEachRobot(function(robot) {
 			applyFriction(robot);
 		});
 
@@ -188,11 +205,11 @@ function simulate(frames, steps) {
 function getCurrentFrame() {
 	var robotInfo = [];
 
-	robots.forEach(function(robot) {
+	forEachRobot(function(robot, id) {
 		position = robot.body.GetPosition();
 
 		robotInfo.push({
-			id: robot.id,
+			id: id,
 			position: {
 				x: position.get_x(),
 				y: position.get_y(),
