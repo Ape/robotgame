@@ -5,8 +5,8 @@ angular.module('model', [])
 	var update = null;
 	var status = null;
 
-	this.connect = function(host) {
-		socket = io(host);
+	this.connect = function(serverAddress) {
+		socket = io(serverAddress);
 		socket.on('disconnect', onDisconnected);
 		socket.on('update', onUpdate);
 		socket.on('status', onStatus);

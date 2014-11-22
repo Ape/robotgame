@@ -2,7 +2,7 @@ angular.module('robotgame', ['directives', 'model', 'graphics'])
 
 .controller('RobotGameCtrl', function($scope, $http, Model, Graphics) {
 	onConnecting();
-	Model.connect(config.host);
+	Model.connect(config.serverAddress);
 
 	$scope.game = Graphics.init();
 
