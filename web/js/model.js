@@ -23,35 +23,35 @@ angular.module('model', [])
 
 	this.hasUpdate = function() {
 		return update != null;
-	}
+	};
 
 	this.getUpdateTime = function() {
 		return update.time;
-	}
+	};
 
 	this.getCommands = function() {
 		return update.data.commands;
-	}
+	};
 
 	this.getTimestep = function() {
 		return update.data.timestep;
-	}
+	};
 
 	this.getFrames = function() {
 		return update.data.frames;
-	}
+	};
 
 	this.hasStatus = function() {
 		return status != null;
-	}
+	};
 
 	this.getNotReady = function() {
 		return status.notReady;
-	}
+	};
 
 	this.getTimeout = function() {
 		return status.timeout;
-	}
+	};
 
 	function onConnecting() {
 		update = null;
@@ -62,7 +62,7 @@ angular.module('model', [])
 		update = {
 			data: data,
 			time: new Date(),
-		}
+		};
 		status = null;
 
 		$rootScope.$broadcast('update');
@@ -76,7 +76,7 @@ angular.module('model', [])
 			status = {
 				notReady: data.notReady,
 				timeout: timeout,
-			}
+			};
 		} else {
 			status = null;
 		}

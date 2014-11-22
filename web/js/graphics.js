@@ -84,19 +84,19 @@ angular.module('graphics', ['model'])
 		var y = Math.sin(angle);
 
 		filter.matrix = [
-			((LUMA_RED + (x * (1 - LUMA_RED))) + (y * -(LUMA_RED))),
-			((LUMA_GREEN + (x * -(LUMA_GREEN))) + (y * -(LUMA_GREEN))),
-			((LUMA_BLUE + (x * -(LUMA_BLUE))) + (y * (1 - LUMA_BLUE))),
+			(LUMA_RED + (x * (1 - LUMA_RED))) + (y * -(LUMA_RED)),
+			(LUMA_GREEN + (x * -(LUMA_GREEN))) + (y * -(LUMA_GREEN)),
+			(LUMA_BLUE + (x * -(LUMA_BLUE))) + (y * (1 - LUMA_BLUE)),
 			0,
 
-			((LUMA_RED + (x * -(LUMA_RED))) + (y * 0.143)),
-			((LUMA_GREEN + (x * (1 - LUMA_GREEN))) + (y * 0.14)),
-			((LUMA_BLUE + (x * -(LUMA_BLUE))) + (y * -0.283)),
+			(LUMA_RED + (x * -(LUMA_RED))) + (y * 0.143),
+			(LUMA_GREEN + (x * (1 - LUMA_GREEN))) + (y * 0.14),
+			(LUMA_BLUE + (x * -(LUMA_BLUE))) + (y * -0.283),
 			0,
 
-			((LUMA_RED + (x * -(LUMA_RED))) + (y * -((1 - LUMA_RED)))),
-			((LUMA_GREEN + (x * -(LUMA_GREEN))) + (y * LUMA_GREEN)),
-			((LUMA_BLUE + (x * (1 - LUMA_BLUE))) + (y * LUMA_BLUE)),
+			(LUMA_RED + (x * -(LUMA_RED))) + (y * -(1 - LUMA_RED)),
+			(LUMA_GREEN + (x * -(LUMA_GREEN))) + (y * LUMA_GREEN),
+			(LUMA_BLUE + (x * (1 - LUMA_BLUE))) + (y * LUMA_BLUE),
 			0,
 
 			0, 0, 0, 1,
