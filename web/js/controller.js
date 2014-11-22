@@ -1,7 +1,11 @@
 angular.module('robotgame', ['directives', 'model', 'graphics'])
 
 .controller('RobotGameCtrl', function($scope, $http, Model, Graphics) {
-	$scope.connected = false;
+	onConnecting();
+	Model.connect(config.host);
+
+	$scope.game = Graphics.init();
+
 	$http.get('data/commands.json').success(function(commands) {
 		$scope.commandOptions = commands;
 	});
@@ -16,11 +20,8 @@ angular.module('robotgame', ['directives', 'model', 'graphics'])
 		sendCommands();
 	};
 
-	$scope.$on('connecting', function() {
-		$scope.$apply(function() {
-			$scope.connected = false;
-			$scope.message = 'Connecting to the server...';
-		});
+	$scope.$on('disconnected', function() {
+		$scope.$apply(onConnecting);
 	});
 
 	$scope.$on('update', function() {
@@ -45,8 +46,10 @@ angular.module('robotgame', ['directives', 'model', 'graphics'])
 		});
 	});
 
-	$scope.game = Graphics.init();
-	Model.connect(config.host);
+	function onConnecting() {
+		$scope.connected = false;
+		$scope.message = 'Connecting to the server...';
+	}
 
 	function sendCommands() {
 		Model.sendCommands($scope.commands, $scope.ready);

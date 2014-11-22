@@ -6,10 +6,8 @@ angular.module('model', [])
 	var status = null;
 
 	this.connect = function(host) {
-		onConnecting();
-
 		socket = io(host);
-		socket.on('disconnect', onConnecting);
+		socket.on('disconnect', onDisconnected);
 		socket.on('update', onUpdate);
 		socket.on('status', onStatus);
 	};
@@ -53,9 +51,9 @@ angular.module('model', [])
 		return status.timeout;
 	};
 
-	function onConnecting() {
+	function onDisconnected() {
 		update = null;
-		$rootScope.$broadcast('connecting');
+		$rootScope.$broadcast('disconnected');
 	}
 
 	function onUpdate(data) {
