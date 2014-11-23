@@ -1,0 +1,7 @@
+- Use compressed serialization format
+- Add weapons
+	- Missile
+	- Laser
+	- Time bomb
+	- Proximity mine
+- Robots should only spawn in free space
