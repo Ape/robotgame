@@ -1,3 +1,5 @@
+- Use CoffeeScript
+- Robot color should be based on player id
 - Use compressed serialization format
 - Add weapons
 	- Missile
