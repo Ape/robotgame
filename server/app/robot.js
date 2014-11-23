@@ -1,5 +1,6 @@
 var utils = require('./utils.js');
 var box2d = require('./box2d-extended.js').box2d;
+var GameObject = require('./gameobject.js').GameObject;
 
 var SIZE = 1.0; // m
 var DENSITY = 5.0; // kg/m^2
@@ -10,24 +11,54 @@ var SPEED_REVERSE = 1.0; // m/s
 var ANGULAR_SPEED = Math.PI/2; // radians/s
 var LATERAL_FRICTION = 10.0;
 
-exports.Robot = function(world, position) {
-	var body;
+exports.Robot = function(world, initialPosition) {
+	GameObject.call(this, world, createBody(world, initialPosition));
 
-	init(position);
+	var self = this;
+	var commands;
 
-	this.destroy = function() {
-		world.DestroyBody(body);
+	self.getType = function() {
+		return 'robot';
 	};
 
-	this.getPosition = function() {
-		return body.GetPosition();
+	self.setCommands = function(newCommands) {
+		commands = newCommands;
 	};
 
-	this.getRotation = function() {
-		return body.GetAngle();
+	self.onCommandStep = function(stepNumber) {
+		executeCommand(commands[stepNumber]);
 	};
 
-	this.executeCommand = function(command) {
+	self.onSlowdownStep = function() {
+		applyImpulse(-getRelativeVelocity().get_y());
+		applyAngularImpulse(-utils.limitValue(self._body.GetAngularVelocity(), -ANGULAR_SPEED, ANGULAR_SPEED));
+	};
+
+	self.simulate = function() {
+		applyFriction();
+	};
+
+	function createBody(world, position) {
+		var bodyDef = new box2d.b2BodyDef();
+		bodyDef.set_type(box2d.b2_dynamicBody);
+		bodyDef.set_position(position);
+		bodyDef.set_angle(Math.random() * 2.0 * Math.PI);
+		var body = world.getWorld().CreateBody(bodyDef);
+
+		var shape = new box2d.b2PolygonShape();
+		shape.SetAsBox(SIZE / 2, SIZE / 2);
+
+		var fixtureDef = new box2d.b2FixtureDef();
+		fixtureDef.set_shape(shape);
+		fixtureDef.set_density(DENSITY);
+		fixtureDef.set_friction(FRICTION);
+		fixtureDef.set_restitution(RESTITUTION);
+		body.CreateFixture(fixtureDef);
+
+		return body;
+	}
+
+	function executeCommand(command) {
 		switch (command) {
 		case 'forward':
 			applyImpulse(SPEED);
@@ -53,53 +84,26 @@ exports.Robot = function(world, position) {
 			applyAngularImpulse(ANGULAR_SPEED/2);
 			break;
 		}
-	};
-
-	this.slowDown = function() {
-		applyImpulse(-getRelativeVelocity().get_y());
-		applyAngularImpulse(-utils.limitValue(body.GetAngularVelocity(), -ANGULAR_SPEED, ANGULAR_SPEED));
-	};
-
-	this.simulate = function() {
-		applyFriction();
-	};
-
-	function init(position) {
-		var bodyDef = new box2d.b2BodyDef();
-		bodyDef.set_type(box2d.b2_dynamicBody);
-		bodyDef.set_position(position);
-		bodyDef.set_angle(Math.random() * 2.0 * Math.PI);
-		body = world.CreateBody(bodyDef);
-
-		var shape = new box2d.b2PolygonShape();
-		shape.SetAsBox(SIZE / 2, SIZE / 2);
-
-		var fixtureDef = new box2d.b2FixtureDef();
-		fixtureDef.set_shape(shape);
-		fixtureDef.set_density(DENSITY);
-		fixtureDef.set_friction(FRICTION);
-		fixtureDef.set_restitution(RESTITUTION);
-		body.CreateFixture(fixtureDef);
 	}
 
 	function getRelativeVelocity() {
-		return body.GetLinearVelocity().copy().rotate(-body.GetAngle());
+		return self.getVelocity().copy().rotate(-self.getRotation());
 	}
 
 	function applyImpulse(speed) {
-		var impulse = new box2d.b2Vec2(0.0, speed * body.GetMass()).rotate(body.GetAngle());
-		body.ApplyLinearImpulse(impulse, body.GetPosition());
+		var impulse = new box2d.b2Vec2(0.0, speed * self.getMass()).rotate(self.getRotation());
+		self._body.ApplyLinearImpulse(impulse, self.getPosition());
 	}
 
 	function applyAngularImpulse(angularSpeed) {
-		body.ApplyAngularImpulse(angularSpeed * body.GetInertia());
+		self._body.ApplyAngularImpulse(angularSpeed * self.getInertia());
 	}
 
 	function applyFriction() {
 		var frictionalForce = getRelativeVelocity().copy()
 				.mul(new box2d.b2Vec2(-LATERAL_FRICTION, 0))
-				.rotate(body.GetAngle());
+				.rotate(self.getRotation());
 
-		body.ApplyForceToCenter(frictionalForce);
+		self._body.ApplyForceToCenter(frictionalForce);
 	}
 };

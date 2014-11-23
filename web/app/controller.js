@@ -26,13 +26,10 @@ angular.module('robotgame', ['directives', 'model', 'graphics'])
 
 	$scope.$on('update', function() {
 		$scope.$apply(function() {
-			if (!$scope.connected) {
-				$scope.commands = Model.getCommands();
-			}
-
 			$scope.connected = true;
 			$scope.message = '';
 			$scope.ready = false;
+			updateCommands(Model.getStepsPerTurn());
 		});
 	});
 
@@ -49,9 +46,20 @@ angular.module('robotgame', ['directives', 'model', 'graphics'])
 	function onConnecting() {
 		$scope.connected = false;
 		$scope.message = 'Connecting to the server...';
+		$scope.commands = [];
 	}
 
 	function sendCommands() {
 		Model.sendCommands($scope.commands, $scope.ready);
+	}
+
+	function updateCommands(stepsPerTurn) {
+		while ($scope.commands.length > stepsPerTurn) {
+			$scope.commands.pop();
+		}
+
+		while ($scope.commands.length < stepsPerTurn) {
+			$scope.commands.push('stop');
+		}
 	}
 });

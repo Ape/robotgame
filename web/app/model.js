@@ -27,8 +27,8 @@ angular.module('model', [])
 		return update.time;
 	};
 
-	this.getCommands = function() {
-		return update.data.commands;
+	this.getStepsPerTurn = function() {
+		return update.data.stepsPerTurn;
 	};
 
 	this.getTimestep = function() {

@@ -8,7 +8,7 @@ angular.module('graphics', ['model'])
 
 	var renderer;
 	var stage;
-	var texture;
+	var textures;
 	var sprites = [];
 
 	this.init = function() {
@@ -18,7 +18,9 @@ angular.module('graphics', ['model'])
 		stage = new PIXI.Stage(0xcccccc);
 
 		PIXI.scaleModes.DEFAULT = PIXI.scaleModes.NEAREST;
-		texture = PIXI.Texture.fromImage('image/robot.png');
+		textures = {
+			'robot': PIXI.Texture.fromImage('image/robot.png'),
+		}
 
 		return renderer.view;
 	};
@@ -29,8 +31,8 @@ angular.module('graphics', ['model'])
 		if (Model.hasUpdate()) {
 			var frame = getFrame(new Date() - Model.getUpdateTime());
 
-			frame.robots.forEach(function(robot) {
-				renderRobot(robot);
+			frame.objects.forEach(function(object) {
+				renderObject(object);
 			});
 
 			if (Model.hasStatus()) {
@@ -50,20 +52,20 @@ angular.module('graphics', ['model'])
 		return frames[frameNumber];
 	}
 
-	function renderRobot(robot) {
-		var sprite = getSprite(robot.id);
-		sprite.position.x = robot.position.x * WINDOW_WIDTH / ARENA_WIDTH;
-		sprite.position.y = robot.position.y * WINDOW_HEIGHT / ARENA_HEIGHT;
-		sprite.rotation = robot.rotation;
+	function renderObject(object) {
+		var sprite = getSprite(object.type, object.id);
+		sprite.position.x = object.position.x * WINDOW_WIDTH / ARENA_WIDTH;
+		sprite.position.y = object.position.y * WINDOW_HEIGHT / ARENA_HEIGHT;
+		sprite.rotation = object.rotation;
 		stage.addChild(sprite);
 	}
 
-	function getSprite(id) {
+	function getSprite(type, id) {
 		var GOLDEN_ANGLE = 2.399963159042158;
 		var COLOR_OFFSET = -1;
 
 		while (sprites.length <= id) {
-			var sprite = new PIXI.Sprite(texture);
+			var sprite = new PIXI.Sprite(textures[type]);
 			sprite.anchor.x = 0.5;
 			sprite.anchor.y = 0.5;
 			sprite.filters = [createHueFilter((id + COLOR_OFFSET) * GOLDEN_ANGLE)];

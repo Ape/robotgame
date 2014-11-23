@@ -5,7 +5,7 @@ var utils = require('./utils.js');
 var World = require('./world.js').World;
 
 var TURN_TIMEOUT = 10; // s
-var COMMANDS_PER_TURN = 4;
+var STEPS_PER_TURN = 4;
 
 exports.Game = function(port) {
 	var players;
@@ -33,23 +33,25 @@ exports.Game = function(port) {
 				socket: socket,
 				robotId: world.createRobot(),
 				ready: false,
-				commands: _.range(COMMANDS_PER_TURN).map(function() {return 'stop';}),
 			};
 			players[playerId] = player;
+
+			world.getObject(player.robotId).setCommands(_.range(STEPS_PER_TURN)
+					.map(function() {return 'stop';}));
 
 			var update = createUpdate(player, [world.getFrame()]);
 			socket.emit('update', update);
 
 			socket.on('disconnect', function() {
 				console.log('Player from ' + socket.handshake.address + ' disconnected.');
-				world.removeRobot(player.robotId);
+				world.removeObject(player.robotId);
 				delete players[playerId];
 				checkTurnEnd();
 			});
 
 			socket.on('commands', function(commands) {
 				player.ready = commands.ready;
-				player.commands = commands.commands;
+				world.getObject(player.robotId).setCommands(commands.commands);
 				checkTurnEnd();
 			});
 		});
@@ -98,23 +100,16 @@ exports.Game = function(port) {
 			player.ready = false;
 		});
 
-		var frames = world.runTurn(getCommandList());
+		var frames = world.runTurn(STEPS_PER_TURN);
 
 		_.forEach(players, function(player) {
 			player.socket.emit('update', createUpdate(player, frames));
 		});
 	}
 
-	function getCommandList() {
-		return _.range(COMMANDS_PER_TURN).map(function(commandNumber) {
-			return _.zipObject(_.pluck(players, 'robotId'),
-			                   _.chain(players).pluck('commands').pluck(commandNumber).value());
-		});
-	}
-
 	function createUpdate(player, frames) {
 		return {
-			commands: player.commands,
+			stepsPerTurn: STEPS_PER_TURN,
 			timestep: 1000 * world.getTimestep(),
 			frames: frames,
 		};
