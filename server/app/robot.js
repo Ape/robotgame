@@ -13,8 +13,8 @@ var LATERAL_FRICTION = 10.0;
 var CANNON_LINEAR_RECOIL = 0.2; // m/s
 var CANNON_ANGULAR_RECOIL = 0.2; // radians/s
 
-exports.Robot = function(world, initialPosition) {
-	GameObject.call(this, world, createBody(world, initialPosition));
+exports.Robot = function(id, world, initialPosition) {
+	GameObject.call(this, id, world, createBody(world, initialPosition));
 
 	var self = this;
 	var commands;

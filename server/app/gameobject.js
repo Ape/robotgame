@@ -1,5 +1,6 @@
-exports.GameObject = function(world, body) {
+exports.GameObject = function(id, world, body) {
 	var self = this;
+	self._id = id;
 	self._world = world;
 	self._body = body;
 

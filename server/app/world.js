@@ -37,14 +37,14 @@ exports.World = function() {
 	this.createRobot = function() {
 		var id = nextObjectId++;
 		var position = new box2d.b2Vec2(Math.random() * ARENA_WIDTH, Math.random() * ARENA_HEIGHT);
-		objects[id] = new Robot(this, position);
+		objects[id] = new Robot(id, this, position);
 
 		return id;
 	};
 
 	this.createCannonBall = function(shooter) {
 		var id = nextObjectId++;
-		objects[id] = new CannonBall(this, shooter);
+		objects[id] = new CannonBall(id, this, shooter);
 
 		return id;
 	};
