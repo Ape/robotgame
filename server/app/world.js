@@ -1,6 +1,7 @@
 var _ = require('lodash');
 var box2d = require('./box2d-extended.js').box2d;
 var Robot = require('./robot.js').Robot;
+var CannonBall = require('./cannonball.js').CannonBall;
 
 var TIMESTEP = 1.0/60.0; // s
 var COMMAND_FRAMES_PER_STEP = 60;
@@ -37,6 +38,13 @@ exports.World = function() {
 		var id = nextObjectId++;
 		var position = new box2d.b2Vec2(Math.random() * ARENA_WIDTH, Math.random() * ARENA_HEIGHT);
 		objects[id] = new Robot(this, position);
+
+		return id;
+	};
+
+	this.createCannonBall = function(shooter) {
+		var id = nextObjectId++;
+		objects[id] = new CannonBall(this, shooter);
 
 		return id;
 	};

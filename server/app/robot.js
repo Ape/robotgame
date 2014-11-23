@@ -83,6 +83,9 @@ exports.Robot = function(world, initialPosition) {
 		case 'turnrightslow':
 			applyAngularImpulse(ANGULAR_SPEED/2);
 			break;
+		case 'shootcannon':
+			self._world.createCannonBall(self);
+			break;
 		}
 	}
 

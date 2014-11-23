@@ -20,7 +20,8 @@ angular.module('graphics', ['model'])
 		PIXI.scaleModes.DEFAULT = PIXI.scaleModes.NEAREST;
 		textures = {
 			'robot': PIXI.Texture.fromImage('image/robot.png'),
-		}
+			'cannonball': PIXI.Texture.fromImage('image/cannonball.png'),
+		};
 
 		return renderer.view;
 	};
