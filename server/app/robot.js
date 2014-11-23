@@ -10,6 +10,8 @@ var SPEED = 2.0; // m/s
 var SPEED_REVERSE = 1.0; // m/s
 var ANGULAR_SPEED = Math.PI/2; // radians/s
 var LATERAL_FRICTION = 10.0;
+var CANNON_LINEAR_RECOIL = 0.2; // m/s
+var CANNON_ANGULAR_RECOIL = 0.2; // radians/s
 
 exports.Robot = function(world, initialPosition) {
 	GameObject.call(this, world, createBody(world, initialPosition));
@@ -85,6 +87,8 @@ exports.Robot = function(world, initialPosition) {
 			break;
 		case 'shootcannon':
 			self._world.createCannonBall(self);
+			applyImpulse(-CANNON_LINEAR_RECOIL);
+			applyAngularImpulse((2 * Math.random() - 1) * CANNON_ANGULAR_RECOIL);
 			break;
 		}
 	}

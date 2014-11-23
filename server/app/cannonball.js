@@ -1,10 +1,10 @@
 var box2d = require('./box2d-extended.js').box2d;
 var GameObject = require('./gameobject.js').GameObject;
 
-var SHOOT_OFFSET = 1.0; // m
+var SHOOT_OFFSET = 0.7; // m
 var RADIUS = 0.2; // m
-var SPEED = 8.0; // m/s
-var DENSITY = 25.0; // kg/m^2
+var SPEED = 15.0; // m/s
+var DENSITY = 12.0; // kg/m^2
 var FRICTION = 0.2;
 var RESTITUTION = 0.1;
 
