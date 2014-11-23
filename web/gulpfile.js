@@ -3,10 +3,15 @@ var replace = require('gulp-replace-task');
 var ngAnnotate = require('gulp-ng-annotate');
 var uglify = require('gulp-uglify');
 var concat = require('gulp-concat');
+var del = require('del');
 
 var target = 'build';
 
-gulp.task('config', function() {
+gulp.task('clean', function(cb) {
+	del(target, cb);
+});
+
+gulp.task('config', ['clean'], function() {
 	return gulp.src('config.js')
 		.pipe(replace({patterns: [{
 			match: 'SERVER_ADDRESS',
@@ -15,7 +20,7 @@ gulp.task('config', function() {
 		.pipe(gulp.dest(target));
 });
 
-gulp.task('scripts', ['config'], function() {
+gulp.task('scripts', ['clean', 'config'], function() {
 	var sources = [
 		'node_modules/angular/angular.js',
 		'node_modules/pixi.js/bin/pixi.dev.js',
