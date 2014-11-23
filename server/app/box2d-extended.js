@@ -2,6 +2,16 @@ var box2d = require('box2d.js').Box2D;
 
 exports.box2d = box2d;
 
+box2d.b2Vec2.prototype.add = function(vector) {
+	this.Set(this.get_x() + vector.get_x(), this.get_y() + vector.get_y());
+	return this;
+};
+
+box2d.b2Vec2.prototype.sub = function(vector) {
+	this.Set(this.get_x() - vector.get_x(), this.get_y() - vector.get_y());
+	return this;
+};
+
 box2d.b2Vec2.prototype.rotate = function(angle) {
 	var length = this.Length();
 	var newAngle = Math.atan2(this.get_y(), this.get_x()) + angle;
