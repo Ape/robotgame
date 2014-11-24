@@ -1,4 +1,5 @@
-- Use CoffeeScript
+- Use CoffeeScript also on the client
+	- Completely replace Lo-Dash
 - Robot color should be based on player id
 - Use compressed serialization format
 - Add weapons

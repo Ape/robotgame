@@ -2,11 +2,14 @@
 	"name": "robotgame-server",
 	"private": true,
 	"scripts": {
-		"start": "node app/main.js"
+		"start": "coffee app/main.coffee"
 	},
 	"dependencies": {
 		"lodash": "^2.4.1",
 		"socket.io": "^1.2.1",
 		"box2d.js": "^1.0.0"
+	},
+	"devDependencies": {
+		"coffee-script": "^1.8.0"
 	}
 }
