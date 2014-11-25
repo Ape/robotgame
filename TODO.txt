@@ -1,5 +1,4 @@
 - Use CoffeeScript also on the client
-	- Completely replace Lo-Dash
 - Use lists instead of objects where more suitable
 - Robot color should be based on player id
 - Use compressed serialization format
