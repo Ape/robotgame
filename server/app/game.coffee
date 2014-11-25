@@ -7,8 +7,7 @@ TURN_TIMEOUT = 10 # s
 STEPS_PER_TURN = 4
 
 class exports.Game
-	_players: {}
-	_nextPlayerId: 0
+	_players: []
 	_world: null
 	_turnTimeout: null
 
@@ -20,50 +19,51 @@ class exports.Game
 		io.listen(port)
 		io.on('connection', (socket) =>
 			console.log("Player from #{socket.handshake.address} connected.")
-			[player, playerId] = @_addPlayer(socket)
+			player = @_addPlayer(socket)
 			@_sendInitialUpdate(socket)
 
 			socket.on('disconnect', =>
 				console.log("Player from #{socket.handshake.address} disconnected.")
-				@_world.removeObject(player.robotId)
-				delete @_players[playerId]
+				@_world.removeObject(player.robot)
+				@_players = @_players.filter((p) -> p != player)
 				@_checkTurnEnd()
 			)
 
 			socket.on('commands', (commands) =>
 				player.ready = commands.ready
-				@_world.getObject(player.robotId).setCommands(commands.commands)
+				player.robot.setCommands(commands.commands)
 				@_checkTurnEnd()
 			)
 		)
 
 	_addPlayer: (socket) ->
+		id = @_getNextPlayerId()
 		player = {
+			id: id
 			socket: socket
-			robotId: @_world.createRobot()
+			robot: @_world.createRobot(id, STEPS_PER_TURN)
 			ready: false
 		}
+		@_players.push(player)
+		player
 
-		id = @_nextPlayerId++
-		@_players[id] = player
-
-		@_world.getObject(player.robotId)
-				.setCommands('stop' for i in [0...STEPS_PER_TURN])
-
-		[player, id]
+	_getNextPlayerId: ->
+		id = 0
+		id++ until (player for player in @_players when player.id == id).length == 0
+		id
 
 	_sendInitialUpdate: (socket) ->
 		update = @_createUpdate([@_world.getFrame()])
 		socket.emit('update', update)
 
 	_checkTurnEnd: ->
-		if Object.keys(@_players).length > 0
-			notReady = (player for id, player of @_players when not player.ready).length
+		if @_players.length > 0
+			notReady = (player for player in @_players when not player.ready).length
 
 			if notReady == 0
 				@_update()
 			else
-				if notReady == Object.keys(@_players).length
+				if notReady == @_players.length
 					@_stopTurnTimeout()
 				else
 					@_turnTimeout ?= setTimeout(@_update, TURN_TIMEOUT * 1000)
@@ -85,11 +85,10 @@ class exports.Game
 
 	_update: ->
 		@_stopTurnTimeout()
-		for id, player of @_players
-			player.ready = false
+		player.ready = false for player in @_players
 
 		frames = @_world.runTurn(STEPS_PER_TURN)
-		for id, player of @_players
+		for player in @_players
 			player.socket.emit('update', @_createUpdate(frames))
 
 	_createUpdate: (frames) ->

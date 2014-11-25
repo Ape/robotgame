@@ -14,8 +14,7 @@ VELOCITY_ITERATIONS = 6
 POSITION_ITERATIONS = 2
 
 class exports.World
-	_objects: {}
-	_nextObjectId: 0
+	_objects: []
 	_world: null
 
 	constructor: ->
@@ -23,37 +22,31 @@ class exports.World
 		@_createWalls()
 
 	getTimestep: -> TIMESTEP
-	getObject: (id) -> @_objects[id]
+	getFrame: -> {objects: _getObjectUpdate(object) for object in @_objects}
 	getWorld: -> @_world
 
-	getFrame: ->
-		{objects: _getObjectUpdate(id, object) for id, object of @_objects}
-
-	createRobot: ->
-		id = @_nextObjectId++
+	createRobot: (playerId) ->
 		position = new box2d.b2Vec2(Math.random() * ARENA_WIDTH,
 		                            Math.random() * ARENA_HEIGHT)
-		@_objects[id] = new Robot(id, @, position)
+		@_addObject(new Robot(playerId, @, position))
 
-		id
+	createCannonBall: (shooter) -> @_addObject(new CannonBall(@, shooter))
 
-	createCannonBall: (shooter) ->
-		id = @_nextObjectId++
-		@_objects[id] = new CannonBall(id, @, shooter)
-
-		id
-
-	removeObject: (id) ->
-		@_objects[id].destroy()
-		delete @_objects[id]
+	removeObject: (object) ->
+		object.destroy()
+		@_objects = (o for o in @_objects when o != object)
 
 	runTurn: (numberOfSteps) ->
 		[0...numberOfSteps].reduce((frames, stepNumber) =>
-			object.onCommandStep(stepNumber) for id, object of @_objects
+			object.onCommandStep(stepNumber) for object in @_objects
 			frames = frames.concat(@_simulate(COMMAND_FRAMES_PER_STEP))
-			object.onSlowdownStep(stepNumber) for id, object of @_objects
+			object.onSlowdownStep(stepNumber) for object in @_objects
 			frames.concat(@_simulate(SLOWDOWN_FRAMES_PER_STEP))
 		, [])
+
+	_addObject: (object) ->
+		@_objects.push(object)
+		object
 
 	_createWalls: ->
 		@_createWall(new box2d.b2Vec2(0.0, 0.0),
@@ -81,14 +74,14 @@ class exports.World
 
 	_simulate: (numberOfFrames) ->
 		for frame in [0...numberOfFrames]
-			object.simulate() for id, object of @_objects
+			object.simulate() for object in @_objects
 			@_world.Step(TIMESTEP, VELOCITY_ITERATIONS, POSITION_ITERATIONS)
 			@getFrame()
 
-	_getObjectUpdate = (id, object) ->
+	_getObjectUpdate = (object) ->
 		{
-			id: parseInt(id, 10)
 			type: object.getType()
+			playerId: object.getPlayerId()
 			position: {
 				x: object.getPosition().get_x()
 				y: object.getPosition().get_y()

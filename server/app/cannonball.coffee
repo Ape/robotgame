@@ -12,15 +12,15 @@ RESTITUTION = 0.1
 class exports.CannonBall extends GameObject
 	_lifetime: null
 
-	constructor: (id, world, shooter) ->
-		super(id, world, _createBody(world, shooter))
+	constructor: (world, shooter) ->
+		super(null, world, _createBody(world, shooter))
 		@_lifetime = LIFETIME
 
 	getType: -> 'cannonball'
 
 	onSlowdownStep: ->
 		@_lifetime--
-		@_world.removeObject(@_id) if @_lifetime <= 0
+		@_world.removeObject(@) if @_lifetime <= 0
 
 	_createBody = (world, shooter) ->
 		position = shooter.getPosition().copy()

@@ -9,7 +9,7 @@ angular.module('graphics', ['model'])
 	var renderer;
 	var stage;
 	var textures;
-	var sprites = [];
+	var playerColorFilters = [];
 
 	this.init = function() {
 		renderer = PIXI.autoDetectRenderer(WINDOW_WIDTH, WINDOW_HEIGHT);
@@ -54,26 +54,35 @@ angular.module('graphics', ['model'])
 	}
 
 	function renderObject(object) {
-		var sprite = getSprite(object.type, object.id);
+		var sprite = getSprite(object.type, object.playerId);
 		sprite.position.x = object.position.x * WINDOW_WIDTH / ARENA_WIDTH;
 		sprite.position.y = object.position.y * WINDOW_HEIGHT / ARENA_HEIGHT;
 		sprite.rotation = object.rotation;
 		stage.addChild(sprite);
 	}
 
-	function getSprite(type, id) {
+	function getSprite(type, playerId) {
+		var sprite = new PIXI.Sprite(textures[type]);
+		sprite.anchor.x = 0.5;
+		sprite.anchor.y = 0.5;
+
+		if (playerId != null) {
+			sprite.filters = [getPlayerColorFilter(playerId)];
+		}
+
+		return sprite;
+	}
+
+	function getPlayerColorFilter(id) {
 		var GOLDEN_ANGLE = 2.399963159042158;
 		var COLOR_OFFSET = -1;
 
-		while (sprites.length <= id) {
-			var sprite = new PIXI.Sprite(textures[type]);
-			sprite.anchor.x = 0.5;
-			sprite.anchor.y = 0.5;
-			sprite.filters = [createHueFilter((id + COLOR_OFFSET) * GOLDEN_ANGLE)];
-			sprites.push(sprite);
+		while (playerColorFilters.length <= id) {
+			filter = createHueFilter((playerColorFilters.length + COLOR_OFFSET) * GOLDEN_ANGLE);
+			playerColorFilters.push(filter);
 		}
 
-		return sprites[id];
+		return playerColorFilters[id];
 	}
 
 	function createHueFilter(angle) {

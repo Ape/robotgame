@@ -1,6 +1,4 @@
 - Use CoffeeScript also on the client
-- Use lists instead of objects where more suitable
-- Robot color should be based on player id
 - Use compressed serialization format
 - Add weapons
 	- Missile

@@ -16,13 +16,13 @@ CANNON_ANGULAR_RECOIL = 0.2 # radians/s
 class exports.Robot extends GameObject
 	_commands: []
 
-	constructor: (id, world, position) ->
-		super(id, world, _createBody(world, position))
+	constructor: (playerId, world, position, stepsInTurn) ->
+		super(playerId, world, _createBody(world, position))
+		@_commands = 'stop' for i in [0...stepsInTurn]
 
 	getType: -> 'robot'
-
-	setCommands: (commands) ->
-		@_commands = commands
+	setCommands: (commands) -> @_commands = commands
+	simulate: -> @_applyFriction()
 
 	onCommandStep: (stepNumber) ->
 		@_executeCommand(@_commands[stepNumber])
@@ -34,8 +34,6 @@ class exports.Robot extends GameObject
 		@_applyImpulse(-@_getRelativeVelocity().get_y())
 		@_applyAngularImpulse(angularImpulse)
 
-	simulate: -> @_applyFriction()
-
 	_executeCommand: (command) ->
 		switch command
 			when 'forward' then @_applyImpulse(SPEED)
@@ -46,8 +44,7 @@ class exports.Robot extends GameObject
 			when 'turnrightslow' then @_applyAngularImpulse(ANGULAR_SPEED / 2)
 			when 'shootcannon' then @_shootCannon()
 
-	_getRelativeVelocity: ->
-		@getVelocity().copy().rotate(-@getRotation())
+	_getRelativeVelocity: -> @getVelocity().copy().rotate(-@getRotation())
 
 	_applyImpulse: (speed) ->
 		impulse = new box2d.b2Vec2(0.0, speed * @getMass())

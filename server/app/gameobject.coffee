@@ -1,10 +1,11 @@
 class exports.GameObject
-	_id: null
+	_playerId: null
 	_world: null
 	_body: null
 
-	constructor: (@_id, @_world, @_body) ->
+	constructor: (@_playerId, @_world, @_body) ->
 	destroy: -> @_world.getWorld().DestroyBody(@_body)
+	getPlayerId: -> @_playerId
 	getPosition: -> @_body.GetPosition()
 	getVelocity: -> @_body.GetLinearVelocity()
 	getRotation: -> @_body.GetAngle()
@@ -12,6 +13,6 @@ class exports.GameObject
 	getInertia: -> @_body.GetInertia()
 
 	getType: ->
+	simulate: ->
 	onCommandStep: (stepNumber) ->
 	onSlowdownStep: ->
-	simulate: ->
