@@ -1,4 +1,3 @@
-_ = require('lodash')
 http = require('http')
 io = require('socket.io')(http, {serveClient: false})
 utils = require('./utils.coffee')
@@ -49,7 +48,7 @@ class exports.Game
 		@_players[id] = player
 
 		@_world.getObject(player.robotId)
-				.setCommands(_.range(STEPS_PER_TURN).map(-> 'stop'))
+				.setCommands('stop' for i in [0...STEPS_PER_TURN])
 
 		[player, id]
 
@@ -58,13 +57,13 @@ class exports.Game
 		socket.emit('update', update)
 
 	_checkTurnEnd: ->
-		if _.size(@_players) > 0
-			notReady = _.where(@_players, {'ready': false}).length
+		if Object.keys(@_players).length > 0
+			notReady = (player for id, player of @_players when not player.ready).length
 
 			if notReady == 0
 				@_update()
 			else
-				if notReady == _.size(@_players)
+				if notReady == Object.keys(@_players).length
 					@_stopTurnTimeout()
 				else
 					@_turnTimeout ?= setTimeout(@_update, TURN_TIMEOUT * 1000)
@@ -86,15 +85,12 @@ class exports.Game
 
 	_update: ->
 		@_stopTurnTimeout()
-		_.forEach(@_players, (player) ->
+		for id, player of @_players
 			player.ready = false
-			true
-		)
 
 		frames = @_world.runTurn(STEPS_PER_TURN)
-		_.forEach(@_players, (player) =>
+		for id, player of @_players
 			player.socket.emit('update', @_createUpdate(frames))
-		)
 
 	_createUpdate: (frames) ->
 		{

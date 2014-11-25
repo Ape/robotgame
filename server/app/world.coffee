@@ -1,4 +1,3 @@
-_ = require('lodash')
 box2d = require('./box2d-extended.coffee').box2d
 Robot = require('./robot.coffee').Robot
 CannonBall = require('./cannonball.coffee').CannonBall
@@ -25,8 +24,10 @@ class exports.World
 
 	getTimestep: -> TIMESTEP
 	getObject: (id) -> @_objects[id]
-	getFrame: -> {objects: _.map(@_objects, _getObjectUpdate)}
 	getWorld: -> @_world
+
+	getFrame: ->
+		{objects: _getObjectUpdate(id, object) for id, object of @_objects}
 
 	createRobot: ->
 		id = @_nextObjectId++
@@ -47,10 +48,10 @@ class exports.World
 		delete @_objects[id]
 
 	runTurn: (numberOfSteps) ->
-		_.range(numberOfSteps).reduce((frames, stepNumber) =>
-			_.forEach(@_objects, (object) -> object.onCommandStep(stepNumber))
+		[0...numberOfSteps].reduce((frames, stepNumber) =>
+			object.onCommandStep(stepNumber) for id, object of @_objects
 			frames = frames.concat(@_simulate(COMMAND_FRAMES_PER_STEP))
-			_.forEach(@_objects, (object) -> object.onSlowdownStep(stepNumber))
+			object.onSlowdownStep(stepNumber) for id, object of @_objects
 			frames.concat(@_simulate(SLOWDOWN_FRAMES_PER_STEP))
 		, [])
 
@@ -79,13 +80,12 @@ class exports.World
 		body.CreateFixture(fixtureDef)
 
 	_simulate: (numberOfFrames) ->
-		_.range(numberOfFrames).map((frame) =>
-			_.forEach(@_objects, (object) -> object.simulate())
+		for frame in [0...numberOfFrames]
+			object.simulate() for id, object of @_objects
 			@_world.Step(TIMESTEP, VELOCITY_ITERATIONS, POSITION_ITERATIONS)
 			@getFrame()
-		)
 
-	_getObjectUpdate = (object, id) ->
+	_getObjectUpdate = (id, object) ->
 		{
 			id: parseInt(id, 10)
 			type: object.getType()
