@@ -83,7 +83,7 @@ class exports.Game
 		else
 			null
 
-	_update: ->
+	_update: =>
 		@_stopTurnTimeout()
 		player.ready = false for player in @_players
 
